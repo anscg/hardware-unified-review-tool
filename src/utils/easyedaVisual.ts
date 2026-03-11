@@ -882,6 +882,7 @@ function parseShapeLine(
 }
 
 function parsePad(tokens: string[], fallbackStroke: string): EasyEdaVisualPrimitive[] {
+  // PAD~shape~cx~cy~width~height~layerId~net~number~holeRadius~points~rotation~id~holeLength~holePoints~plated
   const shape = (tokens[1] ?? '').toUpperCase();
   const x = number(tokens[2], 0);
   const y = number(tokens[3], 0);
@@ -893,11 +894,12 @@ function parsePad(tokens: string[], fallbackStroke: string): EasyEdaVisualPrimit
 
   const layer = tokens[6] ?? '';
   const color = layerColor(layer, fallbackStroke);
-  const rotation = number(tokens[10], 0);
+  const holeRadius = Math.abs(number(tokens[9], 0));
+  const rotation = number(tokens[11], 0);
   const padPrimitives: EasyEdaVisualPrimitive[] = [];
 
   if (shape === 'POLYGON') {
-    const polygonPoints = parsePoints(tokens[9] ?? '');
+    const polygonPoints = parsePoints(tokens[10] ?? '');
     if (polygonPoints.length >= 3) {
       padPrimitives.push({
         kind: 'polyline',
@@ -931,13 +933,12 @@ function parsePad(tokens: string[], fallbackStroke: string): EasyEdaVisualPrimit
     });
   }
 
-  const holeDiameter = Math.abs(number(tokens[8], 0));
-  if (holeDiameter > 0) {
+  if (holeRadius > 0) {
     padPrimitives.push({
       kind: 'circle',
       cx: x,
       cy: y,
-      r: holeDiameter / 2,
+      r: holeRadius,
       stroke: '#2f2b3b',
       strokeWidth: 0.4,
       fill: BACKGROUND_COLOR,
