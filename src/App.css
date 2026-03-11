@@ -461,6 +461,36 @@
   overflow: hidden;
 }
 
+.easyeda-viewer.easyeda-pcb-fullscreen {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.easyeda-viewer.easyeda-pcb-fullscreen .easyeda-canvas-shell {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: 0;
+}
+
+.easyeda-viewer.easyeda-pcb-fullscreen .easyeda-canvas-toolbar {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  background: rgba(15, 16, 22, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.45rem;
+}
+
+.easyeda-viewer.easyeda-pcb-fullscreen .easyeda-canvas-viewport {
+  border: none;
+  border-radius: 0;
+}
+
 .easyeda-summary h3 {
   font-size: 1rem;
   margin-bottom: 0.35rem;
@@ -483,6 +513,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+  position: relative;
 }
 
 .easyeda-canvas-toolbar {

@@ -144,8 +144,20 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
 
   const result = state.result;
   if (result.mode === 'json') {
+    const isPcb = result.inspection.documentKind === 'pcb';
+    const hasVisual = Boolean(result.visualDocument);
+
+    // PCB with visual: immersive full-screen canvas like KiCad viewer
+    if (isPcb && result.visualDocument) {
+      return (
+        <div className="easyeda-viewer easyeda-pcb-fullscreen">
+          <EasyEdaCanvasView document={result.visualDocument} />
+        </div>
+      );
+    }
+
     return (
-      <div className={`easyeda-viewer ${result.visualDocument ? 'easyeda-visual' : 'easyeda-archive'}`}>
+      <div className={`easyeda-viewer ${hasVisual ? 'easyeda-visual' : 'easyeda-archive'}`}>
         <div className="easyeda-summary">
           <h3>{file.name}</h3>
           <p>

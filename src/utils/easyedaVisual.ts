@@ -235,50 +235,59 @@ function parseShapeLine(
 
   switch (prefix) {
     case 'TRACK': {
-      const points = parsePoints(tokens[4] ?? '');
+      // PCB: TRACK~strokeWidth~layerId~net~points~id~locked (tilde-separated)
+      // Old: TRACK_strokeWidth_layerId_net_points (underscore-separated)
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      const points = parsePoints(f[4] ?? '');
       if (points.length < 2) return [];
-      const layer = tokens[2] ?? '';
+      const layer = f[2] ?? '';
       return [
         {
           kind: 'polyline',
           points,
           closed: false,
           stroke: layerColor(layer, defaultStroke),
-          strokeWidth: positiveNumber(tokens[1], 1.2),
+          strokeWidth: positiveNumber(f[1], 1.2),
           fill: null,
           opacity: 1,
         },
       ];
     }
     case 'CIRCLE': {
-      const r = Math.abs(number(tokens[3], 0));
+      // PCB: CIRCLE~cx~cy~r~strokeWidth~layerId~id~locked
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      const r = Math.abs(number(f[3], 0));
       if (r <= 0) return [];
-      const layer = tokens[5] ?? '';
+      const layer = f[5] ?? '';
       return [
         {
           kind: 'circle',
-          cx: number(tokens[1], 0),
-          cy: number(tokens[2], 0),
+          cx: number(f[1], 0),
+          cy: number(f[2], 0),
           r,
           stroke: layerColor(layer, defaultStroke),
-          strokeWidth: positiveNumber(tokens[4], 1),
+          strokeWidth: positiveNumber(f[4], 1),
           fill: null,
           opacity: 1,
         },
       ];
     }
     case 'RECT': {
+      // PCB: RECT~x~y~width~height~layerId~id~locked
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
       const normalized = normalizeRect(
-        number(tokens[1], 0),
-        number(tokens[2], 0),
-        number(tokens[3], 0),
-        number(tokens[4], 0)
+        number(f[1], 0),
+        number(f[2], 0),
+        number(f[3], 0),
+        number(f[4], 0)
       );
       if (normalized.width <= 0 || normalized.height <= 0) {
         return [];
       }
-      const layer = tokens[5] ?? '';
-      const styleValues = splitWhitespace(parts[1]);
+      const layer = f[5] ?? '';
       return [
         {
           kind: 'rect',
@@ -290,22 +299,25 @@ function parseShapeLine(
           ry: 0,
           rotation: 0,
           stroke: layerColor(layer, defaultStroke),
-          strokeWidth: positiveNumber(styleValues[0], 0.8),
-          fill: normalizeColor(styleValues[1] ?? parts[2], null),
+          strokeWidth: 0.8,
+          fill: null,
           opacity: 1,
         },
       ];
     }
     case 'ARC': {
-      const layer = tokens[2] ?? '';
-      const path = tokens.slice(4).join('_').trim();
+      // PCB: ARC~strokeWidth~layerId~net~pathString~helperDots~id~locked
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      const layer = f[2] ?? '';
+      const path = isTilde ? (f[4] ?? '').trim() : tokens.slice(4).join('_').trim();
       if (!path) return [];
       return [
         {
           kind: 'path',
           path,
           stroke: layerColor(layer, defaultStroke),
-          strokeWidth: positiveNumber(tokens[1], 1),
+          strokeWidth: positiveNumber(f[1], 1),
           fill: null,
           opacity: 1,
         },
@@ -313,6 +325,25 @@ function parseShapeLine(
     }
     case 'SOLIDREGION':
     case 'COPPERAREA': {
+      // PCB SOLIDREGION: SOLIDREGION~layerId~net~points~type~id~locked
+      // PCB COPPERAREA: COPPERAREA~strokeWidth~layerId~net~points~clearance~fillStyle~id~...
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      if (isTilde) {
+        const layer = prefix === 'SOLIDREGION' ? (parts[1] ?? '') : (parts[2] ?? '');
+        const path = prefix === 'SOLIDREGION' ? (parts[3] ?? '') : (parts[4] ?? '');
+        if (!path.trim()) return [];
+        const color = layerColor(layer, defaultStroke);
+        return [
+          {
+            kind: 'path',
+            path: path.trim(),
+            stroke: color,
+            strokeWidth: 0.4,
+            fill: color,
+            opacity: DEFAULT_FILL_OPACITY,
+          },
+        ];
+      }
       const layer = tokens[1] ?? tokens[2] ?? '';
       const path = prefix === 'SOLIDREGION' ? tokens.slice(3).join('_') : tokens.slice(4).join('_');
       if (!path.trim()) return [];
@@ -344,19 +375,36 @@ function parseShapeLine(
       ];
     }
     case 'TEXT': {
-      const displayToken = (parts[1] ?? '').toLowerCase();
+      // PCB: TEXT~type~x~y~strokeWidth~rotation~mirror~layerId~net~fontSize~string~pathData~display~id
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      const displayToken = (f[1] ?? '').toLowerCase();
       if (displayToken.includes('none')) return [];
-      const layer = tokens[6] ?? '';
-      const text = decodeEasyEdaText(tokens[8] ?? '');
+      const layer = isTilde ? (f[7] ?? '') : (f[6] ?? '');
+      const text = decodeEasyEdaText(isTilde ? (f[10] ?? '') : (f[8] ?? ''));
       if (!text) return [];
+      // PCB TEXT has path data for the rendered text outline
+      const pathData = isTilde ? (f[11] ?? '').trim() : '';
+      if (pathData) {
+        return [
+          {
+            kind: 'path',
+            path: pathData,
+            stroke: layerColor(layer, defaultStroke),
+            strokeWidth: positiveNumber(f[4], 0.8),
+            fill: null,
+            opacity: 0.95,
+          },
+        ];
+      }
       return [
         {
           kind: 'text',
-          x: number(tokens[2], 0),
-          y: number(tokens[3], 0),
+          x: number(f[2], 0),
+          y: number(f[3], 0),
           text,
-          size: positiveNumber(tokens[7], 8),
-          rotation: number(tokens[5], 0),
+          size: positiveNumber(isTilde ? f[9] : f[7], 8),
+          rotation: number(f[5], 0),
           fill: layerColor(layer, defaultStroke),
           opacity: 0.95,
           anchor: 'start',
@@ -364,11 +412,14 @@ function parseShapeLine(
       ];
     }
     case 'VIA': {
-      const x = number(tokens[1], 0);
-      const y = number(tokens[2], 0);
-      const diameter = Math.abs(number(tokens[3], 0));
+      // PCB: VIA~cx~cy~diameter~net~holeRadius~id~locked
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      const x = number(f[1], 0);
+      const y = number(f[2], 0);
+      const diameter = Math.abs(number(f[3], 0));
       if (diameter <= 0) return [];
-      const drillRadius = Math.abs(number(tokens[5], 0));
+      const drillRadius = Math.abs(number(f[5], 0));
       const outer = diameter / 2;
       const inner = drillRadius > 0 ? Math.min(outer * 0.9, drillRadius) : 0;
       const layerColorValue = layerColor('1', defaultStroke);
@@ -399,13 +450,16 @@ function parseShapeLine(
       return output;
     }
     case 'HOLE': {
-      const radius = Math.abs(number(tokens[3], 0));
+      // PCB: HOLE~cx~cy~diameter~id~locked
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      const radius = Math.abs(number(f[3], 0));
       if (radius <= 0) return [];
       return [
         {
           kind: 'circle',
-          cx: number(tokens[1], 0),
-          cy: number(tokens[2], 0),
+          cx: number(f[1], 0),
+          cy: number(f[2], 0),
           r: radius,
           stroke: '#cbd5e1',
           strokeWidth: 0.6,
@@ -415,7 +469,10 @@ function parseShapeLine(
       ];
     }
     case 'PAD': {
-      return parsePad(tokens, defaultStroke);
+      // PCB: PAD~shape~cx~cy~width~height~layerId~net~number~holeRadius~points~rotation~id~...
+      const isTilde = tokens.length <= 1 && parts.length > 1;
+      const f = isTilde ? parts : tokens;
+      return parsePad(f, defaultStroke);
     }
     case 'W':
     case 'PL':
@@ -1018,12 +1075,6 @@ function inferTextAnchor(rawValue: string): TextAnchor {
   return 'start';
 }
 
-function splitWhitespace(value: string | undefined): string[] {
-  return (value ?? '')
-    .split(/\s+/)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
-}
 
 function decodeEasyEdaText(value: string): string {
   return value
