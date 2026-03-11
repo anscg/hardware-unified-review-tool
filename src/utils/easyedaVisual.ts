@@ -514,13 +514,47 @@ function parseShapeLine(
         },
       ];
     }
-    case 'T':
     case 'N': {
-      // Standard schematic T: T~displayFlag~x~y~rotation~color~fontFamily~fontSize~...~anchor~text~...
+      // Standard schematic netlabel: N~pinDotX~pinDotY~rotation~color~name~id~anchor~posX~posY~fontFamily~fontSize
+      const isStdSch = tokens.length <= 1 && parts.length > 1;
+      if (isStdSch) {
+        const text = decodeEasyEdaText(parts[5] ?? '');
+        if (!text) return [];
+        return [
+          {
+            kind: 'text',
+            x: number(parts[8] || parts[1], 0),
+            y: number(parts[9] || parts[2], 0),
+            text,
+            size: positiveNumber(parts[11], 7),
+            rotation: number(parts[3], 0),
+            fill: normalizeColor(parts[4], defaultStroke) ?? defaultStroke,
+            opacity: 0.95,
+            anchor: inferTextAnchor(parts[7] ?? 'start'),
+          },
+        ];
+      }
+      const text = decodeEasyEdaText(tokens[4] ?? '');
+      if (!text) return [];
+      return [
+        {
+          kind: 'text',
+          x: number(tokens[1], 0),
+          y: number(tokens[2], 0),
+          text,
+          size: positiveNumber(parts[1], 7),
+          rotation: number(tokens[3], 0),
+          fill: normalizeColor(tokens[5], defaultStroke) ?? defaultStroke,
+          opacity: 0.95,
+          anchor: 'middle',
+        },
+      ];
+    }
+    case 'T': {
+      // Standard schematic T: T~displayFlag~x~y~rotation~color~fontFamily~fontSize~~~~anchor~text~visible~alignment~id~...
       // PCB T: parts[0] = T_..._..._... with underscore tokens
       const isStdSch = tokens.length <= 1 && parts.length > 1;
       if (isStdSch) {
-        // Standard schematic text: T~displayFlag~x~y~rotation~color~fontFamily~fontSize~~~~anchor~text~visible~alignment~id~...
         const displayFlag = (parts[1] ?? '').toUpperCase();
         if (displayFlag === 'H' || displayFlag === 'HIDE') return [];
         const text = decodeEasyEdaText(parts[12] ?? '');
@@ -539,20 +573,114 @@ function parseShapeLine(
           },
         ];
       }
-      const text = decodeEasyEdaText(prefix === 'N' ? tokens[4] ?? '' : tokens[8] ?? '');
+      const text = decodeEasyEdaText(tokens[8] ?? '');
       if (!text) return [];
-      const isNetLabel = prefix === 'N';
       return [
         {
           kind: 'text',
-          x: number(isNetLabel ? tokens[1] : tokens[2], 0),
-          y: number(isNetLabel ? tokens[2] : tokens[3], 0),
+          x: number(tokens[2], 0),
+          y: number(tokens[3], 0),
           text,
-          size: positiveNumber(isNetLabel ? parts[1] : tokens[7], 7),
-          rotation: number(isNetLabel ? tokens[3] : tokens[4], 0),
+          size: positiveNumber(tokens[7], 7),
+          rotation: number(tokens[4], 0),
           fill: normalizeColor(tokens[5], defaultStroke) ?? defaultStroke,
           opacity: 0.95,
-          anchor: isNetLabel ? 'middle' : inferTextAnchor(parts[2] ?? 'start'),
+          anchor: inferTextAnchor(parts[2] ?? 'start'),
+        },
+      ];
+    }
+    case 'F': {
+      // Netflag: F~partId~x~y~rotation~id^^pinDot^^markString^^shapes...
+      // Segments separated by ^^
+      const segments = line.split('^^');
+      const results: EasyEdaVisualPrimitive[] = [];
+      if (segments.length >= 3) {
+        // Mark string segment: name~color~posX~posY~rotation~anchor~visible~fontFamily~fontSize
+        const markParts = (segments[2] ?? '').split('~');
+        const text = decodeEasyEdaText(markParts[0] ?? '');
+        const visible = markParts[6] !== '0';
+        if (text && visible) {
+          results.push({
+            kind: 'text',
+            x: number(markParts[2], number(parts[2], 0)),
+            y: number(markParts[3], number(parts[3], 0)),
+            text,
+            size: positiveNumber(markParts[8], 7),
+            rotation: number(markParts[4], 0),
+            fill: normalizeColor(markParts[1], defaultStroke) ?? defaultStroke,
+            opacity: 0.95,
+            anchor: inferTextAnchor(markParts[5] ?? 'start'),
+          });
+        }
+      }
+      // Parse embedded shapes (segments after the mark string)
+      for (let i = 3; i < segments.length; i++) {
+        const shapeLine = (segments[i] ?? '').trim();
+        if (shapeLine) {
+          const nested = parseShapeLine(shapeLine, kindHint, unknownPrefixes);
+          results.push(...nested);
+        }
+      }
+      return results;
+    }
+    case 'BE': {
+      // Bus entry: BE~rotation~x1~y1~x2~y2~id
+      const isStdSch = tokens.length <= 1 && parts.length > 1;
+      const f = isStdSch ? parts : tokens;
+      const x1 = number(f[2], 0);
+      const y1 = number(f[3], 0);
+      const x2 = number(f[4], 0);
+      const y2 = number(f[5], 0);
+      if (x1 === x2 && y1 === y2) return [];
+      return [
+        {
+          kind: 'polyline',
+          points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
+          closed: false,
+          stroke: defaultStroke,
+          strokeWidth: 1,
+          fill: null,
+          opacity: 1,
+        },
+      ];
+    }
+    case 'L': {
+      // Line: L~x1~y1~x2~y2~color~width~style~fillColor~id
+      const isStdSch = tokens.length <= 1 && parts.length > 1;
+      const f = isStdSch ? parts : tokens;
+      const x1 = number(f[1], 0);
+      const y1 = number(f[2], 0);
+      const x2 = number(f[3], 0);
+      const y2 = number(f[4], 0);
+      if (x1 === x2 && y1 === y2) return [];
+      return [
+        {
+          kind: 'polyline',
+          points: [{ x: x1, y: y1 }, { x: x2, y: y2 }],
+          closed: false,
+          stroke: normalizeColor(f[5], defaultStroke) ?? defaultStroke,
+          strokeWidth: positiveNumber(f[6], 1),
+          fill: null,
+          opacity: 1,
+        },
+      ];
+    }
+    case 'C': {
+      // Circle: C~cx~cy~r~color~width~style~fillColor~id
+      const isStdSch = tokens.length <= 1 && parts.length > 1;
+      const f = isStdSch ? parts : tokens;
+      const r = Math.abs(number(f[3], 0));
+      if (r <= 0) return [];
+      return [
+        {
+          kind: 'circle',
+          cx: number(f[1], 0),
+          cy: number(f[2], 0),
+          r,
+          stroke: normalizeColor(f[4], defaultStroke) ?? defaultStroke,
+          strokeWidth: positiveNumber(f[5], 1),
+          fill: normalizeColor(f[7], null),
+          opacity: 1,
         },
       ];
     }
@@ -604,11 +732,86 @@ function parseShapeLine(
         },
       ];
     }
+    case 'P': {
+      // Schematic pin: P~show~electricType~spicePin~x~y~rotation~id^^pinDotX~pinDotY^^pathData~color^^name^^number^^dot^^clock
+      const segments = line.split('^^');
+      const results: EasyEdaVisualPrimitive[] = [];
+      // Segment 2: pin path (the visible line connecting component body to pin dot)
+      if (segments.length >= 3) {
+        const pathSegParts = (segments[2] ?? '').split('~');
+        const pathData = pathSegParts[0] ?? '';
+        const pathColor = normalizeColor(pathSegParts[1], defaultStroke) ?? defaultStroke;
+        if (pathData.trim()) {
+          results.push({
+            kind: 'path',
+            path: pathData,
+            stroke: pathColor,
+            strokeWidth: 1,
+            fill: null,
+            opacity: 1,
+          });
+        }
+      }
+      // Segment 1: pin dot (small circle at connection point)
+      if (segments.length >= 2) {
+        const dotParts = (segments[1] ?? '').split('~');
+        const dotX = number(dotParts[0], NaN);
+        const dotY = number(dotParts[1], NaN);
+        if (Number.isFinite(dotX) && Number.isFinite(dotY)) {
+          results.push({
+            kind: 'circle',
+            cx: dotX,
+            cy: dotY,
+            r: 1.5,
+            stroke: defaultStroke,
+            strokeWidth: 0.3,
+            fill: defaultStroke,
+            opacity: 0.4,
+          });
+        }
+      }
+      // Segment 5: NOT dot (small circle indicating inversion)
+      if (segments.length >= 6) {
+        const notParts = (segments[5] ?? '').split('~');
+        if (notParts[0] === '1') {
+          const notX = number(notParts[1], NaN);
+          const notY = number(notParts[2], NaN);
+          if (Number.isFinite(notX) && Number.isFinite(notY)) {
+            results.push({
+              kind: 'circle',
+              cx: notX,
+              cy: notY,
+              r: 3,
+              stroke: defaultStroke,
+              strokeWidth: 0.8,
+              fill: null,
+              opacity: 1,
+            });
+          }
+        }
+      }
+      // Segment 6: clock indicator path
+      if (segments.length >= 7) {
+        const clockParts = (segments[6] ?? '').split('~');
+        if (clockParts[0] === '1') {
+          const clockPath = clockParts[1] ?? '';
+          if (clockPath.trim()) {
+            results.push({
+              kind: 'path',
+              path: clockPath,
+              stroke: defaultStroke,
+              strokeWidth: 0.8,
+              fill: null,
+              opacity: 1,
+            });
+          }
+        }
+      }
+      return results;
+    }
     default: {
       if (
         prefix !== 'LIB' &&
-        prefix !== 'F' &&
-        prefix !== 'P' &&
         prefix !== 'PIN' &&
         prefix !== 'DIMENSION' &&
         prefix !== 'I' &&
@@ -836,9 +1039,21 @@ function normalizeColor(value: string | undefined, fallback: string | null): str
   const trimmed = (value ?? '').trim();
   if (!trimmed) return fallback;
   if (trimmed.toLowerCase() === 'none' || trimmed.toLowerCase() === 'null') return null;
-  if (/^#[0-9a-f]{3,8}$/i.test(trimmed)) return trimmed;
+  if (/^#[0-9a-f]{3,8}$/i.test(trimmed)) return isDarkColor(trimmed) ? fallback : trimmed;
   if (/^(rgba?|hsla?)\(/i.test(trimmed)) return trimmed;
   return fallback;
+}
+
+function isDarkColor(hex: string): boolean {
+  const stripped = hex.replace('#', '');
+  const full = stripped.length <= 4
+    ? [...stripped].map((c) => c + c).join('')
+    : stripped;
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return false;
+  return (r * 299 + g * 587 + b * 114) / 1000 < 40;
 }
 
 function number(value: string | undefined, fallback: number): number {
