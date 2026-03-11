@@ -990,8 +990,8 @@ function computeBounds(primitives: EasyEdaVisualPrimitive[]): EasyEdaVisualBound
         }
         break;
       case 'path': {
-        const pathPoints = parsePoints(primitive.path);
-        for (const point of pathPoints) {
+        const pathCoords = extractPathCoordinates(primitive.path);
+        for (const point of pathCoords) {
           includePoint(point.x, point.y);
         }
         break;
@@ -1033,6 +1033,74 @@ function computeBounds(primitives: EasyEdaVisualPrimitive[]): EasyEdaVisualBound
     width,
     height,
   };
+}
+
+function extractPathCoordinates(path: string): Point[] {
+  const points: Point[] = [];
+  // Tokenize: split into commands and numbers
+  const tokenRegex = /([MLHVCSQTAZmlhvcsqtaz])|(-?\d+(?:\.\d+)?)/g;
+  let match: RegExpExecArray | null;
+  const tokenList: Array<{ type: 'cmd'; value: string } | { type: 'num'; value: number }> = [];
+  while ((match = tokenRegex.exec(path)) !== null) {
+    if (match[1]) {
+      tokenList.push({ type: 'cmd', value: match[1] });
+    } else if (match[2]) {
+      const n = parseFloat(match[2]);
+      if (Number.isFinite(n)) tokenList.push({ type: 'num', value: n });
+    }
+  }
+
+  let i = 0;
+  let cmd = '';
+  while (i < tokenList.length) {
+    const token = tokenList[i];
+    if (token.type === 'cmd') {
+      cmd = token.value;
+      i++;
+      continue;
+    }
+    const nums: number[] = [];
+    while (i < tokenList.length && tokenList[i].type === 'num') {
+      nums.push((tokenList[i] as { type: 'num'; value: number }).value);
+      i++;
+    }
+    const upper = cmd.toUpperCase();
+    switch (upper) {
+      case 'M':
+      case 'L':
+      case 'T':
+        for (let j = 0; j + 1 < nums.length; j += 2) {
+          points.push({ x: nums[j], y: nums[j + 1] });
+        }
+        break;
+      case 'H':
+        for (const n of nums) points.push({ x: n, y: 0 });
+        break;
+      case 'V':
+        for (const n of nums) points.push({ x: 0, y: n });
+        break;
+      case 'C':
+        // C x1 y1 x2 y2 x y — take endpoint (every 6 nums)
+        for (let j = 0; j + 5 < nums.length; j += 6) {
+          points.push({ x: nums[j + 4], y: nums[j + 5] });
+        }
+        break;
+      case 'S':
+      case 'Q':
+        // S/Q x1 y1 x y — take endpoint (every 4 nums)
+        for (let j = 0; j + 3 < nums.length; j += 4) {
+          points.push({ x: nums[j + 2], y: nums[j + 3] });
+        }
+        break;
+      case 'A':
+        // A rx ry xrot largeArc sweep x y — skip first 5, take last 2
+        for (let j = 0; j + 6 < nums.length; j += 7) {
+          points.push({ x: nums[j + 5], y: nums[j + 6] });
+        }
+        break;
+    }
+  }
+  return points;
 }
 
 function parsePoints(value: string): Point[] {
