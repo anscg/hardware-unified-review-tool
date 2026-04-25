@@ -36,6 +36,9 @@ export default function LandingPage({ onLoaded }: { onLoaded: () => void }) {
       } else {
         setFiles(files);
         setResolverMap(resolverMap);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('repo', url);
+        window.history.pushState({}, '', newUrl.toString());
         setGlobalLoading(false);
         onLoaded();
       }

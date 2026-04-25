@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import UrlInput from './components/UrlInput';
 import FileExplorer from './components/FileExplorer';
 import ComponentTree from './components/ComponentTree';
@@ -8,6 +8,7 @@ import EasyEdaViewer from './components/EasyEdaViewer';
 import LoadingOverlay from './components/LoadingOverlay';
 import LandingPage from './components/LandingPage';
 import { useStore } from './store/useStore';
+import { isGithubUrl, fetchRepositoryFiles } from './utils/github';
 import './App.css';
 
 function App() {
@@ -18,8 +19,51 @@ function App() {
     resolverMap,
     performanceMode,
     togglePerformanceMode,
+    setGithubUrl,
+    setFiles,
+    setResolverMap,
+    setIsLoading,
+    setError,
   } = useStore();
   const [showViewer, setShowViewer] = useState(false);
+  const autoLoadedRef = useRef(false);
+
+  // Auto-load from ?repo= query parameter
+  useEffect(() => {
+    if (autoLoadedRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const repoUrl = params.get('repo');
+    if (!repoUrl || !isGithubUrl(repoUrl)) return;
+
+    autoLoadedRef.current = true;
+    setGithubUrl(repoUrl);
+    setIsLoading(true);
+    setError(null);
+
+    (async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const store = useStore.getState();
+        const { files, resolverMap } = await fetchRepositoryFiles(
+          store.repoOwner,
+          store.repoName,
+          store.repoBranch,
+          store.repoPath
+        );
+        if (files.length === 0) {
+          setError('No hardware files found in this repository');
+        } else {
+          setFiles(files);
+          setResolverMap(resolverMap);
+          setShowViewer(true);
+        }
+        setIsLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch files');
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (files.length > 0 && !selectedFile) {

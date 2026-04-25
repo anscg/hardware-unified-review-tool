@@ -76,6 +76,9 @@ export default function UrlInput() {
       } else {
         setFiles(files);
         setResolverMap(resolverMap);
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('repo', urlToProcess);
+        window.history.pushState({}, '', newUrl.toString());
       }
       setIsLoading(false);
     } catch (error) {
