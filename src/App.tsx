@@ -5,6 +5,7 @@ import ComponentTree from './components/ComponentTree';
 import ModelViewer from './components/ModelViewer';
 import KiCadViewer from './components/KiCadViewer';
 import EasyEdaViewer from './components/EasyEdaViewer';
+import GerberViewer from './components/GerberViewer';
 import LoadingOverlay from './components/LoadingOverlay';
 import LandingPage from './components/LandingPage';
 import { useStore } from './store/useStore';
@@ -108,6 +109,8 @@ function App() {
               <KiCadViewer fileUrl={selectedFile.url} fileName={selectedFile.name} resolverMap={resolverMap} />
             ) : selectedFile.kind === 'easyeda' ? (
               <EasyEdaViewer file={selectedFile} />
+            ) : selectedFile.kind === 'gerber' ? (
+              <GerberViewer file={selectedFile} />
             ) : (
               <ModelViewer />
             )

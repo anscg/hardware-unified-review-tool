@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
 
-export type HardwareFileKind = 'model' | 'kicad' | 'easyeda';
+export type HardwareFileKind = 'model' | 'kicad' | 'easyeda' | 'gerber';
 
 export interface ModelFileData {
   kind: 'model';
@@ -30,7 +30,16 @@ export interface EasyEdaFileData {
   size?: number;
 }
 
-export type HardwareFile = ModelFileData | KiCadFileData | EasyEdaFileData;
+export interface GerberFileData {
+  kind: 'gerber';
+  name: string;
+  path: string;
+  url: string;
+  type: 'gerber_rs274x' | 'gerber_drill' | 'gerber_zip';
+  size?: number;
+}
+
+export type HardwareFile = ModelFileData | KiCadFileData | EasyEdaFileData | GerberFileData;
 
 export interface ModelComponent {
   id: string;

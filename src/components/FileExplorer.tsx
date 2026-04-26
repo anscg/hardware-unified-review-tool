@@ -31,7 +31,9 @@ export default function FileExplorer() {
       kicad_wks: FileText,
       easyeda_json: FileText,
       easyeda_epro: FolderOpen,
-      easyeda_zip: FolderOpen
+      easyeda_zip: FolderOpen,
+      gerber_rs274x: Cpu,
+      gerber_drill: Cpu
     };
     const IconComponent = iconMap[type] || File;
     return <IconComponent size={18} />;
@@ -41,6 +43,7 @@ export default function FileExplorer() {
     if (kind === 'model') return '3D Model';
     if (kind === 'kicad') return 'KiCad';
     if (kind === 'easyeda') return 'EasyEDA';
+    if (kind === 'gerber') return 'Gerber';
     return kind;
   };
 
@@ -48,7 +51,10 @@ export default function FileExplorer() {
     const labels: Record<string, string> = {
       easyeda_json: 'JSON',
       easyeda_epro: 'EPRO',
-      easyeda_zip: 'ZIP'
+      easyeda_zip: 'ZIP',
+      gerber_rs274x: 'GERBER',
+      gerber_drill: 'DRILL',
+      gerber_zip: 'GERBER ZIP'
     };
     return (labels[type] ?? type).toUpperCase();
   };

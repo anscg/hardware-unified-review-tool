@@ -100,8 +100,8 @@ export default function LandingPage({ onLoaded }: { onLoaded: () => void }) {
         <p className="landing-note">
           or drag &amp; drop files directly onto the page.
           <br />
-          Supports STL, STEP, OBJ, GLTF, PLY, 3MF, KiCad files, and EasyEDA
-          (.json/.epro/.zip).
+          Supports STL, STEP, OBJ, GLTF, PLY, 3MF, KiCad, EasyEDA, and Gerber
+          files.
         </p>
       </div>
     </div>

@@ -168,8 +168,11 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
                 | Entry: <strong>{result.sourceEntry}</strong>
               </>
             )}{' '}
-            | Detected document:{' '}
-            <strong>{formatDocumentKind(result.inspection.documentKind)}</strong>
+            | File type:{' '}
+            <strong>
+              {documentKindIcon(result.inspection.documentKind)}{' '}
+              {formatDocumentKind(result.inspection.documentKind)}
+            </strong>
           </p>
           <p>
             EasyEDA signature:{' '}
@@ -250,7 +253,7 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
             <span className="easyeda-entry-name">{entry.name}</span>
             <span className="easyeda-entry-kind">
               {entry.easyEdaDocumentKind
-                ? formatDocumentKind(entry.easyEdaDocumentKind)
+                ? `${documentKindIcon(entry.easyEdaDocumentKind)} ${formatDocumentKind(entry.easyEdaDocumentKind)}`
                 : entry.isEasyEdaJson
                   ? 'JSON'
                   : 'File'}
@@ -307,6 +310,21 @@ function formatDocumentKind(kind: EasyEdaDocumentKind): string {
       return 'Project';
     default:
       return 'Unknown';
+  }
+}
+
+function documentKindIcon(kind: EasyEdaDocumentKind): string {
+  switch (kind) {
+    case 'schematic':
+      return '📐';
+    case 'pcb':
+      return '🟩';
+    case 'library':
+      return '📦';
+    case 'project':
+      return '📁';
+    default:
+      return '📄';
   }
 }
 

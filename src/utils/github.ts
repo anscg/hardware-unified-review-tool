@@ -3,6 +3,7 @@ import type {
   ModelFileData,
   KiCadFileData,
   EasyEdaFileData,
+  GerberFileData,
 } from '../store/useStore';
 
 const GITHUB_API_BASE = 'https://api.github.com';
@@ -10,7 +11,8 @@ const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com';
 const MODEL_EXTENSIONS = ['.stl', '.step', '.stp', '.obj', '.gltf', '.glb', '.ply', '.3mf'];
 const KICAD_EXTENSIONS = ['.kicad_sch', '.kicad_pcb', '.kicad_prj', '.kicad_wks'];
 const EASYEDA_EXTENSIONS = ['.json', '.epro', '.zip'];
-const SUPPORTED_EXTENSIONS = [...MODEL_EXTENSIONS, ...KICAD_EXTENSIONS, ...EASYEDA_EXTENSIONS];
+const GERBER_EXTENSIONS = ['.gbr', '.ger', '.gtl', '.gbl', '.gts', '.gbs', '.gto', '.gbo', '.gtp', '.gbp', '.gm1', '.gm2', '.gko', '.drl', '.xln'];
+const SUPPORTED_EXTENSIONS = [...MODEL_EXTENSIONS, ...KICAD_EXTENSIONS, ...EASYEDA_EXTENSIONS, ...GERBER_EXTENSIONS];
 
 /**
  * Fetch all files from a GitHub repo using the Git Trees API (single request).
@@ -58,6 +60,15 @@ export async function fetchRepositoryFiles(
           type: ext.slice(1) as KiCadFileData['type'],
           size: item.size
         });
+      } else if (ext === '.zip' && isLikelyGerberZip(name, item.path)) {
+        files.push({
+          kind: 'gerber',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: 'gerber_zip' as GerberFileData['type'],
+          size: item.size,
+        });
       } else if (EASYEDA_EXTENSIONS.includes(ext)) {
         files.push({
           kind: 'easyeda',
@@ -66,6 +77,16 @@ export async function fetchRepositoryFiles(
           url: rawUrl,
           type: mapEasyEdaType(ext),
           size: item.size,
+        });
+      } else if (GERBER_EXTENSIONS.includes(ext)) {
+        const isDrill = ext === '.drl' || ext === '.xln';
+        files.push({
+          kind: 'gerber',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: isDrill ? 'gerber_drill' : 'gerber_rs274x',
+          size: item.size
         });
       } else {
         files.push({
@@ -164,17 +185,11 @@ export async function fetchFileContent(
 
   // If the response is small, check whether it's a Git LFS pointer
   if (contentLength > 0 && contentLength < 1024) {
-    const text = await response.text();
+    const smallBuffer = await response.arrayBuffer();
+    const lfsPointer = parseLfsPointer(smallBuffer);
 
-    if (text.startsWith('version https://git-lfs.github.com')) {
-      const oidMatch = text.match(/^oid sha256:([0-9a-f]+)$/m);
-      const sizeMatch = text.match(/^size (\d+)$/m);
-      if (!oidMatch || !sizeMatch) {
-        throw new Error('Failed to parse LFS pointer file');
-      }
-
-      const oid = oidMatch[1];
-      const size = parseInt(sizeMatch[1], 10);
+    if (lfsPointer) {
+      const { oid, size } = lfsPointer;
 
       // Parse owner/repo from the raw URL:
       // https://raw.githubusercontent.com/{owner}/{repo}/{branch}/...
@@ -219,11 +234,29 @@ export async function fetchFileContent(
       return streamResponse(await fetch(downloadUrl, { signal }), size, onProgress);
     }
 
-    // Not an LFS pointer - convert the already-read text back to an ArrayBuffer
-    return new TextEncoder().encode(text).buffer as ArrayBuffer;
+    // Not an LFS pointer - return the original bytes untouched.
+    return smallBuffer;
   }
 
   return streamResponse(response, contentLength, onProgress);
+}
+
+function parseLfsPointer(content: ArrayBuffer): { oid: string; size: number } | null {
+  const text = new TextDecoder().decode(content);
+  if (!text.startsWith('version https://git-lfs.github.com')) {
+    return null;
+  }
+
+  const oidMatch = text.match(/^oid sha256:([0-9a-f]+)$/m);
+  const sizeMatch = text.match(/^size (\d+)$/m);
+  if (!oidMatch || !sizeMatch) {
+    throw new Error('Failed to parse LFS pointer file');
+  }
+
+  return {
+    oid: oidMatch[1],
+    size: parseInt(sizeMatch[1], 10),
+  };
 }
 
 async function streamResponse(
@@ -314,6 +347,11 @@ function mapEasyEdaType(ext: string): EasyEdaFileData['type'] {
     default:
       return 'easyeda_json';
   }
+}
+
+function isLikelyGerberZip(filename: string, filepath: string): boolean {
+  const lower = (filename + '/' + filepath).toLowerCase();
+  return /gerber/.test(lower) || /\bfab\b/.test(lower) || /\bmanufactur/.test(lower);
 }
 
 export function isGithubUrl(url: string): boolean {
