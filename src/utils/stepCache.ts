@@ -5,7 +5,7 @@ const STEP_CACHE_DB = 'hurt-step-cache';
 const STEP_CACHE_STORE = 'entries';
 const STEP_CACHE_VERSION = 1;
 const STEP_CACHE_MAX_BYTES = 512 * 1024 * 1024;
-const STEP_CACHE_MAX_ENTRIES = 10;
+const STEP_CACHE_MAX_ENTRIES = 25;
 const STEP_CACHE_FORMAT_VERSION = 3;
 
 interface StepCacheRecord {

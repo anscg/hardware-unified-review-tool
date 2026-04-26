@@ -1,16 +1,25 @@
 import { useStore } from '../store/useStore';
 
 export default function LoadingOverlay() {
-  const { isLoading, error } = useStore();
+  const { isLoading, error, files } = useStore();
 
-  if (!isLoading && !error) return null;
+  // Only show the full-screen overlay during repo fetching (before files are loaded).
+  // Once files exist, ModelViewer handles its own inline loading indicator.
+  const showLoading = isLoading && files.length === 0;
+
+  if (!showLoading && !error) return null;
 
   return (
     <div className="loading-overlay">
-      {isLoading && (
+      {showLoading && (
         <div className="loading-spinner">
           <div className="spinner"></div>
-          <p>Loading model...</p>
+          <div className="loading-bar">
+            <div className="loading-bar-track">
+              <div className="loading-bar-fill indeterminate" />
+            </div>
+          </div>
+          <p>Loading repository...</p>
         </div>
       )}
       {error && (

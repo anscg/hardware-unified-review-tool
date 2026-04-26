@@ -120,7 +120,7 @@ export const useStore = create<AppState>((set) => ({
   
   setIsLoading: (loading: boolean) => set({ isLoading: loading }),
   
-  setError: (error: string | null) => set({ error, isLoading: false }),
+  setError: (error: string | null) => set(error ? { error, isLoading: false } : { error }),
   
   setModelComponents: (components: ModelComponent[]) => set({ modelComponents: components }),
   

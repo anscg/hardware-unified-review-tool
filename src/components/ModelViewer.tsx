@@ -137,7 +137,7 @@ export default function ModelViewer() {
   const etaIntervalRef = useRef<number | null>(null);
   const LARGE_MODEL_BYTES = 8 * 1024 * 1024;
   const STEP_PREVIEW_THRESHOLD_BYTES = 12 * 1024 * 1024;
-  const MAX_EDGE_MESH_COUNT = 300;
+  const MAX_EDGE_MESH_COUNT = 100;
   const selectedModelFile =
     selectedFile?.kind === 'model' ? (selectedFile as ModelFileData) : null;
   const selectedFileSize = typeof selectedModelFile?.size === 'number' ? selectedModelFile.size : 0;
@@ -233,7 +233,9 @@ export default function ModelViewer() {
         let loadedModel: { model: THREE.Group; components: ModelComponent[] } | null = null;
 
         // Server-side STEP->GLB conversion is substantially faster for large STEP files.
-        if (isStepFile) {
+        // For smaller files, client-side WASM is faster (avoids serverless cold-start + double parse).
+        const SERVER_STEP_MIN_BYTES = 4 * 1024 * 1024;
+        if (isStepFile && fileSizeBytes >= SERVER_STEP_MIN_BYTES) {
           try {
             setLoadStage('converting');
             startEtaCountdown(estimateProcessingSeconds('server-step', fileSizeBytes));
@@ -498,33 +500,6 @@ export default function ModelViewer() {
 
   return (
     <div className="model-viewer">
-      {isLoading && (
-        <div className="model-loading-indicator">
-          <div className="spinner"></div>
-          <div className="model-loading-progress">
-            <div className="model-loading-progress-track">
-              <div
-                className={`model-loading-progress-fill ${
-                  loadProgress > 0 && loadProgress < 100 ? '' : 'indeterminate'
-                }`}
-                style={
-                  loadProgress > 0 && loadProgress < 100
-                    ? { width: `${Math.max(2, Math.min(loadProgress, 100))}%` }
-                    : undefined
-                }
-              />
-            </div>
-            <div className="model-loading-progress-label">
-              {loadProgress > 0 && loadProgress < 100
-                ? `${Math.round(loadProgress)}%`
-                : loadStage === 'processing'
-                  ? 'Finalizing...'
-                  : 'Preparing...'}
-            </div>
-          </div>
-          <p>{getLoadingMessage()}</p>
-        </div>
-      )}
       <Canvas
         shadows={!effectivePerformanceMode}
         dpr={effectivePerformanceMode ? [1, 1.25] : [1, 2]}
@@ -533,6 +508,7 @@ export default function ModelViewer() {
           powerPreference: 'high-performance',
           antialias: !effectivePerformanceMode,
         }}
+        style={{ position: 'absolute', inset: 0, zIndex: 0 }}
       >
         <PerspectiveCamera makeDefault position={[5, 5, 5]} />
         <OrbitControls makeDefault />
@@ -544,8 +520,8 @@ export default function ModelViewer() {
           position={[10, 15, 8]}
           intensity={effectivePerformanceMode ? 1.2 : 2.5}
           castShadow={!effectivePerformanceMode}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
           shadow-camera-left={-50}
           shadow-camera-right={50}
           shadow-camera-top={50}
@@ -586,6 +562,33 @@ export default function ModelViewer() {
         {/* Model */}
         {modelRef.current && <primitive object={modelRef.current} onClick={handleMeshClick} />}
       </Canvas>
+      {isLoading && (
+        <div className="model-loading-indicator">
+          <div className="spinner"></div>
+          <div className="model-loading-progress">
+            <div className="model-loading-progress-track">
+              <div
+                className={`model-loading-progress-fill ${
+                  loadProgress > 0 && loadProgress < 100 ? '' : 'indeterminate'
+                }`}
+                style={
+                  loadProgress > 0 && loadProgress < 100
+                    ? { width: `${Math.max(2, Math.min(loadProgress, 100))}%` }
+                    : undefined
+                }
+              />
+            </div>
+            <div className="model-loading-progress-label">
+              {loadProgress > 0 && loadProgress < 100
+                ? `${Math.round(loadProgress)}%`
+                : loadStage === 'processing'
+                  ? 'Finalizing...'
+                  : 'Preparing...'}
+            </div>
+          </div>
+          <p>{getLoadingMessage()}</p>
+        </div>
+      )}
     </div>
   );
 }
