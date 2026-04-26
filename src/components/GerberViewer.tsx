@@ -20,6 +20,7 @@ interface GerberLayer {
   svg: string;
   info: LayerInfo | null;
   color: string;
+  tone: LayerTone;
   visible: boolean;
 }
 
@@ -37,6 +38,7 @@ const COLOR_BY_LAYER_TYPE: Record<string, string> = {
 };
 
 type ViewBox = [number, number, number, number];
+type LayerTone = 'copper' | 'mask' | 'silkscreen' | 'paste' | 'drill' | 'outline' | 'default';
 
 function formatLayerInfo(info: LayerInfo): string {
   if (!info.type && !info.side) return 'Unknown Layer';
@@ -131,21 +133,28 @@ async function renderGerberToSvg(gerberString: string, id: string): Promise<stri
 }
 
 function getLayerColor(info: LayerInfo | null, name: string): string {
+  const tone = getLayerTone(info, name);
+  if (tone === 'default') {
+    return DEFAULT_LAYER_COLOR;
+  }
+  return COLOR_BY_LAYER_TYPE[tone];
+}
+
+function getLayerTone(info: LayerInfo | null, name: string): LayerTone {
   const type = (info?.type ?? '').toLowerCase();
-  const byType = COLOR_BY_LAYER_TYPE[type];
-  if (byType) {
-    return byType;
+  if (type in COLOR_BY_LAYER_TYPE) {
+    return type as LayerTone;
   }
 
   const lower = name.toLowerCase();
   if (lower.includes('edge') || lower.includes('outline') || lower.includes('cuts')) {
-    return COLOR_BY_LAYER_TYPE.outline;
+    return 'outline';
   }
   if (lower.endsWith('.drl') || lower.endsWith('.xln')) {
-    return COLOR_BY_LAYER_TYPE.drill;
+    return 'drill';
   }
 
-  return DEFAULT_LAYER_COLOR;
+  return 'default';
 }
 
 function parseViewBox(svg: string): ViewBox | null {
@@ -273,6 +282,7 @@ export default function GerberViewer({ file }: { file: GerberFileData }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<GerberLayer[]>([]);
+  const [showLayerPanel, setShowLayerPanel] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -308,12 +318,20 @@ export default function GerberViewer({ file }: { file: GerberFileData }) {
           try {
             const svg = await renderGerberToSvg(entry.text, entry.name);
             const info = (layerMap[entry.name] as LayerInfo | undefined) ?? null;
+            const layerTone = getLayerTone(info, entry.name);
             const layerColor = getLayerColor(info, entry.name);
             const parsedViewBox = parseViewBox(svg);
             if (parsedViewBox) {
               parsedViewBoxes.push(parsedViewBox);
             }
-            rendered.push({ name: entry.name, svg, info, color: layerColor, visible: true });
+            rendered.push({
+              name: entry.name,
+              svg,
+              info,
+              color: layerColor,
+              tone: layerTone,
+              visible: true,
+            });
           } catch {
             // Skip files that fail to render
           }
@@ -353,70 +371,84 @@ export default function GerberViewer({ file }: { file: GerberFileData }) {
     );
   };
 
+  const setAllLayersVisible = (visible: boolean) => {
+    setLayers((prev) => prev.map((layer) => ({ ...layer, visible })));
+  };
+
   if (loading) {
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div className="gerber-viewer-loading">
         <div className="spinner"></div>
-        <p style={{ color: 'var(--fg-muted)', fontSize: '0.85rem', marginTop: '0.75rem' }}>Rendering Gerber{file.type === 'gerber_zip' ? ' layers' : ''}…</p>
+        <p>Rendering Gerber{file.type === 'gerber_zip' ? ' layers' : ''}...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div className="gerber-viewer-error">
         <div className="error-icon">⚠️</div>
-        <p style={{ color: 'var(--error-bright)', fontSize: '0.85rem' }}>{error}</p>
+        <p>{error}</p>
       </div>
     );
   }
 
   const visibleLayers = layers.filter((l) => l.visible);
+  const selectedCount = visibleLayers.length;
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {layers.length > 1 && (
-        <div style={{ padding: '6px 12px', background: 'var(--bg-panel)', borderBottom: '2px solid var(--border)', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--fg-muted)', marginRight: '4px' }}>Layers:</span>
-          {layers.map((layer, i) => (
-            <button
-              key={layer.name}
-              onClick={() => toggleLayer(i)}
-              style={{
-                all: 'unset',
-                cursor: 'pointer',
-                fontSize: '0.72rem',
-                padding: '2px 8px',
-                borderRadius: '3px',
-                border: `1px solid ${layer.visible ? 'var(--accent)' : 'var(--border)'}`,
-                color: layer.visible ? 'var(--fg)' : 'var(--fg-muted)',
-                background: layer.visible ? 'rgba(174,129,255,0.12)' : 'transparent',
-                opacity: layer.visible ? 1 : 0.6,
-              }}
-              title={layer.info ? formatLayerInfo(layer.info) : layer.name}
-            >
-              {layer.info ? formatLayerInfo(layer.info) : layer.name}
-            </button>
-          ))}
+    <div className="gerber-viewer">
+      <div className="gerber-toolbar">
+        <div className="gerber-toolbar-meta">
+          <span className="gerber-toolbar-title">{file.name}</span>
+          <span className="gerber-toolbar-detail">{selectedCount}/{layers.length} visible</span>
         </div>
-      )}
-      {layers.length === 1 && (
-        <div style={{ padding: '6px 12px', background: 'var(--bg-panel)', borderBottom: '2px solid var(--border)', fontSize: '0.85rem', color: 'var(--fg-muted)', flexShrink: 0 }}>
-          <span style={{ fontWeight: 600, color: 'var(--fg)' }}>{file.name}</span>
-          {layers[0].info && (
-            <span> — {formatLayerInfo(layers[0].info)}</span>
+        <div className="gerber-toolbar-actions">
+          <button type="button" onClick={() => setAllLayersVisible(true)}>Show all</button>
+          <button type="button" onClick={() => setAllLayersVisible(false)}>Hide all</button>
+          {layers.length > 1 && (
+            <button type="button" onClick={() => setShowLayerPanel((value) => !value)}>
+              {showLayerPanel ? 'Hide list' : 'Show list'}
+            </button>
           )}
         </div>
-      )}
-      <div style={{ flex: 1, overflow: 'auto', background: '#141a22', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', position: 'relative' }}>
-        <div style={{ position: 'relative', width: 'min(96%, 1100px)', height: 'min(96%, 900px)', minWidth: '380px', minHeight: '280px', border: '1px solid #2f3847', borderRadius: '6px', background: '#0f131a' }}>
-          {visibleLayers.map((layer) => (
-            <div
-              key={layer.name}
-              style={{ position: 'absolute', inset: 0, opacity: layer.info?.type === 'mask' ? 0.5 : 0.9, mixBlendMode: 'screen' }}
-              dangerouslySetInnerHTML={{ __html: layer.svg }}
-            />
-          ))}
+      </div>
+
+      <div className="gerber-workspace">
+        {showLayerPanel && layers.length > 1 && (
+          <aside className="gerber-layer-panel" aria-label="Gerber layers">
+            {layers.map((layer, i) => (
+              <button
+                key={layer.name}
+                type="button"
+                className={`gerber-layer-chip tone-${layer.tone} ${layer.visible ? 'is-visible' : 'is-hidden'}`}
+                onClick={() => toggleLayer(i)}
+                title={layer.info ? formatLayerInfo(layer.info) : layer.name}
+              >
+                <span className="gerber-layer-swatch" />
+                <span className="gerber-layer-label">{layer.info ? formatLayerInfo(layer.info) : layer.name}</span>
+                <span className="gerber-layer-file">{layer.name}</span>
+              </button>
+            ))}
+          </aside>
+        )}
+
+        <div className="gerber-canvas-wrap">
+          <div className="gerber-canvas-grid" />
+          <div className="gerber-canvas">
+            {visibleLayers.map((layer) => (
+              <div
+                key={layer.name}
+                className={`gerber-layer-svg tone-${layer.tone} ${layer.tone === 'mask' ? 'is-mask' : ''}`}
+                dangerouslySetInnerHTML={{ __html: layer.svg }}
+              />
+            ))}
+            {visibleLayers.length === 0 && (
+              <div className="gerber-empty-selection">
+                <p>No layers selected. Enable one or more layers from the list.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

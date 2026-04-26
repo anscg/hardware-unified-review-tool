@@ -438,6 +438,269 @@
   font-size: 0.85rem;
 }
 
+.gerber-viewer-loading,
+.gerber-viewer-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  background: var(--bg);
+}
+
+.gerber-viewer-error p {
+  color: var(--error-bright);
+}
+
+.gerber-viewer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #11161f;
+}
+
+.gerber-toolbar {
+  height: 40px;
+  border-bottom: 1px solid #283246;
+  background: #161d29;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.65rem;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.gerber-toolbar-meta {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.gerber-toolbar-title {
+  color: #dce7ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(52vw, 540px);
+}
+
+.gerber-toolbar-detail {
+  color: #7f8ea8;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.gerber-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.gerber-toolbar-actions button {
+  all: unset;
+  box-sizing: border-box;
+  border: 1px solid #2c3a52;
+  border-radius: 0.3rem;
+  background: #1b2535;
+  color: #b8c7e6;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.35rem 0.52rem;
+  cursor: pointer;
+}
+
+.gerber-toolbar-actions button:hover {
+  border-color: #5f82bc;
+  color: #e8f2ff;
+}
+
+.gerber-workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.gerber-layer-panel {
+  width: 248px;
+  border-right: 1px solid #2a3448;
+  background: #141b27;
+  padding: 0.55rem;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+
+.gerber-layer-chip {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #27344b;
+  border-radius: 0.42rem;
+  padding: 0.38rem 0.48rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.45rem;
+  cursor: pointer;
+  background: #192436;
+}
+
+.gerber-layer-chip.is-hidden {
+  opacity: 0.52;
+  background: #101724;
+}
+
+.gerber-layer-chip.is-visible {
+  border-color: #4f6e9e;
+}
+
+.gerber-layer-chip:hover {
+  border-color: #6e93ca;
+}
+
+.gerber-layer-swatch {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  margin-top: 0.18rem;
+  border: 1px solid #203146;
+  grid-row: 1 / span 2;
+}
+
+.gerber-layer-label {
+  font-size: 0.74rem;
+  color: #d6e1f8;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gerber-layer-file {
+  font-size: 0.66rem;
+  color: #7b8aa6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gerber-canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background: #0f141d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem;
+  overflow: auto;
+}
+
+.gerber-canvas-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(83, 101, 130, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83, 101, 130, 0.16) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.gerber-canvas {
+  position: relative;
+  width: min(96%, 1100px);
+  height: min(96%, 900px);
+  min-width: 380px;
+  min-height: 280px;
+  border: 1px solid #2f3c54;
+  border-radius: 0.45rem;
+  background: #0f1724;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.gerber-layer-svg {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  opacity: 0.88;
+}
+
+.gerber-layer-svg.is-mask {
+  opacity: 0.45;
+}
+
+.gerber-layer-svg.tone-silkscreen,
+.gerber-layer-svg.tone-outline {
+  mix-blend-mode: normal;
+}
+
+.gerber-empty-selection {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a7c8;
+  font-size: 0.82rem;
+}
+
+.gerber-layer-chip.tone-copper .gerber-layer-swatch {
+  background: #f39c12;
+}
+
+.gerber-layer-chip.tone-mask .gerber-layer-swatch {
+  background: #2ecc71;
+}
+
+.gerber-layer-chip.tone-silkscreen .gerber-layer-swatch {
+  background: #f2f2f2;
+}
+
+.gerber-layer-chip.tone-paste .gerber-layer-swatch {
+  background: #a6c8ff;
+}
+
+.gerber-layer-chip.tone-drill .gerber-layer-swatch {
+  background: #66d9ef;
+}
+
+.gerber-layer-chip.tone-outline .gerber-layer-swatch {
+  background: #ffd166;
+}
+
+.gerber-layer-chip.tone-default .gerber-layer-swatch {
+  background: #9aa6c1;
+}
+
+@media (max-width: 920px) {
+  .gerber-workspace {
+    flex-direction: column;
+  }
+
+  .gerber-layer-panel {
+    width: 100%;
+    max-height: 34vh;
+    border-right: none;
+    border-bottom: 1px solid #2a3448;
+  }
+
+  .gerber-canvas {
+    min-width: 280px;
+    min-height: 240px;
+  }
+}
+
 .easyeda-viewer {
   width: 100%;
   height: 100%;
@@ -476,6 +739,7 @@
   left: 0.5rem;
   z-index: 10;
   background: rgba(15, 16, 22, 0.85);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   border-radius: 0.35rem;
