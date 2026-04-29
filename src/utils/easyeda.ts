@@ -56,8 +56,24 @@ export function tryParseJsonContent(content: ArrayBuffer): ParsedJsonContent | n
   const bytes = new Uint8Array(content);
   let cursor = 0;
 
-  while (cursor < bytes.length && isWhitespaceByte(bytes[cursor])) {
-    cursor += 1;
+  while (cursor < bytes.length) {
+    if (isWhitespaceByte(bytes[cursor])) {
+      cursor += 1;
+      continue;
+    }
+
+    // Some non-zip EasyEDA Pro files include a UTF-8 BOM prefix.
+    if (
+      cursor + 2 < bytes.length &&
+      bytes[cursor] === 0xef &&
+      bytes[cursor + 1] === 0xbb &&
+      bytes[cursor + 2] === 0xbf
+    ) {
+      cursor += 3;
+      continue;
+    }
+
+    break;
   }
 
   if (cursor >= bytes.length) {
@@ -70,7 +86,7 @@ export function tryParseJsonContent(content: ArrayBuffer): ParsedJsonContent | n
   }
 
   const text = new TextDecoder().decode(content);
-  const trimmed = text.trim();
+  const trimmed = text.replace(/^\uFEFF/, '').trim();
   if (trimmed.length === 0) {
     return null;
   }
@@ -94,6 +110,11 @@ export function analyzeEasyEdaJson(
   const lowerKeys = new Set(topLevelKeys.map((key) => key.toLowerCase()));
   const hints: string[] = [];
   const filenameLower = filename.toLowerCase();
+  const baseName = filenameLower.split('/').pop() ?? filenameLower;
+  const isEsch = baseName.endsWith('.esch');
+  const isEpcb = baseName.endsWith('.epcb');
+  const isProProjectJson = baseName === 'project.json';
+  const isProManifestJson = baseName === 'manifest.json';
 
   const head = asRecord(record?.head);
   if (head) {
@@ -190,6 +211,24 @@ export function analyzeEasyEdaJson(
     kindScores.pcb += 1;
   }
 
+  // EasyEDA Pro filename signatures (.esch / .epcb / project.json / manifest.json)
+  if (isEsch) {
+    kindScores.schematic += 4;
+    hints.push('epro:.esch');
+  }
+  if (isEpcb) {
+    kindScores.pcb += 4;
+    hints.push('epro:.epcb');
+  }
+  if (isProProjectJson) {
+    kindScores.project += 4;
+    hints.push('epro:project.json');
+  }
+  if (isProManifestJson) {
+    kindScores.project += 3;
+    hints.push('epro:manifest.json');
+  }
+
   const normalizedDocType = normalizeDocType(record, head);
   if (normalizedDocType === 'schematic') {
     kindScores.schematic += 2;
@@ -214,9 +253,15 @@ export function analyzeEasyEdaJson(
       'schematics',
       'pcbs',
     ]) || /easyeda|(?:^|[._-])(sch|schematic|pcb|lib|project|epro)(?:[._-]|$)/.test(filenameLower);
+  const likelyByProSignature =
+    isEsch || isEpcb || isProProjectJson || isProManifestJson;
 
   return {
-    isEasyEda: likelyByStructure || likelyByKeywords || documentKind !== 'unknown',
+    isEasyEda:
+      likelyByStructure ||
+      likelyByKeywords ||
+      likelyByProSignature ||
+      documentKind !== 'unknown',
     documentKind,
     topLevelKeys,
     hints,
@@ -233,7 +278,7 @@ export async function inspectEasyEdaArchive(
   let skippedJsonEntries = 0;
 
   const jsonCandidates = entries.filter(
-    (entry) => !entry.name.endsWith('/') && entry.name.toLowerCase().endsWith('.json')
+    (entry) => !entry.name.endsWith('/') && hasInspectableJsonExtension(entry.name)
   );
 
   const rankedJsonCandidates = [...jsonCandidates].sort((a, b) => {
@@ -257,7 +302,7 @@ export async function inspectEasyEdaArchive(
 
     const shouldInspectJson =
       selectedJsonCandidates.has(entry.localHeaderOffset) &&
-      entry.name.toLowerCase().endsWith('.json');
+      hasInspectableJsonExtension(entry.name);
 
     if (shouldInspectJson) {
       if (
@@ -305,7 +350,7 @@ export async function extractPrimaryEasyEdaArchiveJsonDocument(
   const contentBytes = new Uint8Array(content);
 
   const jsonCandidates = entries
-    .filter((entry) => !entry.name.endsWith('/') && entry.name.toLowerCase().endsWith('.json'))
+    .filter((entry) => !entry.name.endsWith('/') && hasInspectableJsonExtension(entry.name))
     .sort((a, b) => rankEasyEdaName(b.name) - rankEasyEdaName(a.name))
     .slice(0, MAX_ARCHIVE_JSON_SCAN_ENTRIES);
 
@@ -566,11 +611,24 @@ function rankEasyEdaName(name: string): number {
   const lower = name.toLowerCase();
   let score = 0;
   if (lower.includes('easyeda')) score += 5;
+  if (lower.endsWith('.epcb')) score += 6;
+  if (lower.endsWith('.esch')) score += 6;
+  if (lower.endsWith('/project.json') || lower === 'project.json') score += 5;
+  if (lower.endsWith('/manifest.json') || lower === 'manifest.json') score += 4;
   if (/(?:^|[/_-])(sch|schematic)(?:[._/-]|$)/.test(lower)) score += 4;
   if (/(?:^|[/_-])(pcb|board)(?:[._/-]|$)/.test(lower)) score += 4;
   if (/(?:^|[/_-])(lib|library|symbol|footprint)(?:[._/-]|$)/.test(lower)) score += 3;
   if (/(?:^|[/_-])(project|pro)(?:[._/-]|$)/.test(lower)) score += 2;
   return score;
+}
+
+function hasInspectableJsonExtension(name: string): boolean {
+  const lower = name.toLowerCase();
+  return (
+    lower.endsWith('.json') ||
+    lower.endsWith('.esch') ||
+    lower.endsWith('.epcb')
+  );
 }
 
 function isWhitespaceByte(value: number): boolean {

@@ -145,7 +145,9 @@ It combines:
 | Type | Extensions |
 | --- | --- |
 | Standard Edition | `.json` |
-| Pro Edition Archives | `.epro`, `.zip` |
+| Pro Edition Archives | `.epro`, `.eproproject`, `.zip` |
+
+EasyEDA Pro archives can contain `project.json` and `manifest.json` metadata files, plus schematic sheets like `.esch` and PCB layouts like `.epcb`.
 
 ## Large File / STEP Performance
 

@@ -16,6 +16,7 @@
     "@tracespace/plotter": "^5.0.0-alpha.0",
     "@tracespace/renderer": "^5.0.0-alpha.0",
     "@types/three": "^0.182.0",
+    "@vercel/analytics": "^2.0.1",
     "gerber-to-svg": "^4.2.8",
     "lucide-react": "^0.563.0",
     "occt-import-js": "0.0.12",

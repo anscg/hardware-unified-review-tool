@@ -10,6 +10,7 @@ import LoadingOverlay from './components/LoadingOverlay';
 import LandingPage from './components/LandingPage';
 import { useStore } from './store/useStore';
 import { isGithubUrl, fetchRepositoryFiles } from './utils/github';
+import { Analytics } from '@vercel/analytics/react';
 import './App.css';
 
 function App() {
@@ -77,6 +78,7 @@ function App() {
       <>
         <LandingPage onLoaded={() => setShowViewer(true)} />
         <LoadingOverlay />
+        <Analytics />
       </>
     );
   }
@@ -123,6 +125,7 @@ function App() {
       </div>
 
       <LoadingOverlay />
+      <Analytics />
     </div>
   );
 }

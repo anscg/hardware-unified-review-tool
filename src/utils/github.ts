@@ -10,7 +10,7 @@ const GITHUB_API_BASE = 'https://api.github.com';
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com';
 const MODEL_EXTENSIONS = ['.stl', '.step', '.stp', '.obj', '.gltf', '.glb', '.ply', '.3mf'];
 const KICAD_EXTENSIONS = ['.kicad_sch', '.kicad_pcb', '.kicad_prj', '.kicad_wks'];
-const EASYEDA_EXTENSIONS = ['.json', '.epro', '.zip'];
+const EASYEDA_EXTENSIONS = ['.json', '.epro', '.eproproject', '.esch', '.epcb', '.zip'];
 const GERBER_EXTENSIONS = ['.gbr', '.ger', '.gtl', '.gbl', '.gts', '.gbs', '.gto', '.gbo', '.gtp', '.gbp', '.gm1', '.gm2', '.gko', '.drl', '.xln'];
 const SUPPORTED_EXTENSIONS = [...MODEL_EXTENSIONS, ...KICAD_EXTENSIONS, ...EASYEDA_EXTENSIONS, ...GERBER_EXTENSIONS];
 
@@ -340,8 +340,14 @@ function mapEasyEdaType(ext: string): EasyEdaFileData['type'] {
   switch (ext) {
     case '.json':
       return 'easyeda_json';
+    case '.eproproject':
+      return 'easyeda_eproproject';
     case '.epro':
       return 'easyeda_epro';
+    case '.esch':
+      return 'easyeda_esch';
+    case '.epcb':
+      return 'easyeda_epcb';
     case '.zip':
       return 'easyeda_zip';
     default:

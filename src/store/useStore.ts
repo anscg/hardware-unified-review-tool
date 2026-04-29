@@ -26,7 +26,13 @@ export interface EasyEdaFileData {
   name: string;
   path: string;
   url: string;
-  type: 'easyeda_json' | 'easyeda_epro' | 'easyeda_zip';
+  type:
+    | 'easyeda_json'
+    | 'easyeda_epro'
+    | 'easyeda_zip'
+    | 'easyeda_eproproject'
+    | 'easyeda_esch'
+    | 'easyeda_epcb';
   size?: number;
 }
 

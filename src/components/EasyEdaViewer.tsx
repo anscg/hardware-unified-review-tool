@@ -25,7 +25,7 @@ type EasyEdaReadResult =
     }
   | {
       mode: 'archive';
-      archiveFormat: 'EPRO' | 'ZIP';
+      archiveFormat: 'EPRO' | 'ZIP' | 'EPROJECT';
       inspection: EasyEdaArchiveInspection;
     };
 
@@ -52,15 +52,33 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
         if (cancelled) return;
 
         const parsedJson = tryParseJsonContent(content);
-        const archiveFormat = file.type === 'easyeda_epro' ? 'EPRO' : 'ZIP';
+        const archiveFormat: 'EPRO' | 'ZIP' | 'EPROJECT' =
+          file.type === 'easyeda_eproproject'
+            ? 'EPROJECT'
+            : file.type === 'easyeda_epro'
+              ? 'EPRO'
+              : 'ZIP';
 
-        if (file.type === 'easyeda_json') {
+        const isDirectJson =
+          file.type === 'easyeda_json' ||
+          file.type === 'easyeda_esch' ||
+          file.type === 'easyeda_epcb';
+
+        if (isDirectJson) {
           if (!parsedJson) {
-            throw new Error('File extension is .json but content is not valid JSON.');
+            throw new Error(
+              `File ${file.name} is expected to be a JSON document but content is not valid JSON.`
+            );
           }
+          const sourceLabel =
+            file.type === 'easyeda_esch'
+              ? 'ESCH (EasyEDA Pro schematic)'
+              : file.type === 'easyeda_epcb'
+                ? 'EPCB (EasyEDA Pro PCB)'
+                : 'JSON';
           setState({
             status: 'ready',
-            result: buildJsonResult(parsedJson.value, file.name, 'JSON', parsedJson.text),
+            result: buildJsonResult(parsedJson.value, file.name, sourceLabel, parsedJson.text),
           });
           return;
         }
@@ -232,7 +250,7 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
           <strong>{entries.length}</strong>
         </p>
         <p>
-          Detected EasyEDA JSON docs: <strong>{detectedDocs.length}</strong>
+          Detected EasyEDA docs: <strong>{detectedDocs.length}</strong>
         </p>
         {result.inspection.skippedJsonEntries > 0 && (
           <p className="easyeda-muted">

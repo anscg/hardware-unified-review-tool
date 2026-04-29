@@ -32,6 +32,9 @@ export default function FileExplorer() {
       easyeda_json: FileText,
       easyeda_epro: FolderOpen,
       easyeda_zip: FolderOpen,
+      easyeda_eproproject: FolderOpen,
+      easyeda_esch: Cpu,
+      easyeda_epcb: Cpu,
       gerber_rs274x: Cpu,
       gerber_drill: Cpu
     };
@@ -52,6 +55,9 @@ export default function FileExplorer() {
       easyeda_json: 'JSON',
       easyeda_epro: 'EPRO',
       easyeda_zip: 'ZIP',
+      easyeda_eproproject: 'EPROJECT',
+      easyeda_esch: 'ESCH',
+      easyeda_epcb: 'EPCB',
       gerber_rs274x: 'GERBER',
       gerber_drill: 'DRILL',
       gerber_zip: 'GERBER ZIP'
