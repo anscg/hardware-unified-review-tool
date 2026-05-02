@@ -448,6 +448,19 @@ function normalizeDocType(
   return null;
 }
 
+export type EasyEdaZipEntry = ZipEntry;
+
+export function parseEasyEdaZipEntries(content: ArrayBuffer): ZipEntry[] {
+  return parseZipEntries(content);
+}
+
+export async function readEasyEdaZipEntry(
+  archiveBytes: Uint8Array,
+  entry: ZipEntry
+): Promise<Uint8Array> {
+  return extractZipEntryData(archiveBytes, entry);
+}
+
 function parseZipEntries(content: ArrayBuffer): ZipEntry[] {
   const bytes = new Uint8Array(content);
   const view = new DataView(content);

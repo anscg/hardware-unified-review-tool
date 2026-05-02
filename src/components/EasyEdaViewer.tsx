@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { EasyEdaFileData } from '../store/useStore';
 import { fetchFileContent } from '../utils/github';
 import {
@@ -11,7 +11,22 @@ import {
   type EasyEdaJsonInspection,
 } from '../utils/easyeda';
 import { buildEasyEdaVisualDocument, type EasyEdaVisualDocument } from '../utils/easyedaVisual';
+import {
+  buildEasyEdaProPcbVisual,
+  buildEasyEdaProSchematicVisual,
+  extractEasyEdaProArchive,
+  parseProDocument,
+  type ProArchive,
+  type ProDocument,
+} from '../utils/easyedaPro';
 import EasyEdaCanvasView from './EasyEdaCanvasView';
+
+interface ProSheetSelector {
+  id: string;
+  label: string;
+  documentKind: EasyEdaDocumentKind;
+  build: () => EasyEdaVisualDocument | null;
+}
 
 type EasyEdaReadResult =
   | {
@@ -24,10 +39,24 @@ type EasyEdaReadResult =
       truncated: boolean;
     }
   | {
+      mode: 'pro';
+      sourceLabel: string;
+      sheets: ProSheetSelector[];
+      defaultIndex: number;
+      summary: ProSummary;
+    }
+  | {
       mode: 'archive';
       archiveFormat: 'EPRO' | 'ZIP' | 'EPROJECT';
       inspection: EasyEdaArchiveInspection;
     };
+
+interface ProSummary {
+  pcbCount: number;
+  sheetCount: number;
+  footprintCount: number;
+  symbolCount: number;
+}
 
 type EasyEdaViewState =
   | { status: 'loading' }
@@ -51,7 +80,6 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
         const content = await fetchFileContent(file.url, undefined, controller.signal);
         if (cancelled) return;
 
-        const parsedJson = tryParseJsonContent(content);
         const archiveFormat: 'EPRO' | 'ZIP' | 'EPROJECT' =
           file.type === 'easyeda_eproproject'
             ? 'EPROJECT'
@@ -59,12 +87,39 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
               ? 'EPRO'
               : 'ZIP';
 
+        // EasyEDA Pro projects: .epro / .eproproject ZIP archives that contain
+        // line-delimited NDJSON .epcb/.esch files plus footprints/symbols.
+        if (file.type === 'easyeda_epro' || file.type === 'easyeda_eproproject') {
+          try {
+            const proResult = await tryBuildProArchiveResult(content, file.name, archiveFormat);
+            if (cancelled) return;
+            if (proResult) {
+              setState({ status: 'ready', result: proResult });
+              return;
+            }
+          } catch {
+            // fall through to legacy JSON / inspection path
+          }
+        }
+
+        const parsedJson = tryParseJsonContent(content);
+
         const isDirectJson =
           file.type === 'easyeda_json' ||
           file.type === 'easyeda_esch' ||
           file.type === 'easyeda_epcb';
 
         if (isDirectJson) {
+          // Pro .esch/.epcb are NDJSON line-arrays, not single JSON values.
+          if (!parsedJson && (file.type === 'easyeda_esch' || file.type === 'easyeda_epcb')) {
+            const text = new TextDecoder().decode(content);
+            const proDoc = parseProDocument(text);
+            if (proDoc) {
+              const proResult = buildProDocumentResult(proDoc, file.name, file.type);
+              setState({ status: 'ready', result: proResult });
+              return;
+            }
+          }
           if (!parsedJson) {
             throw new Error(
               `File ${file.name} is expected to be a JSON document but content is not valid JSON.`
@@ -161,6 +216,11 @@ export default function EasyEdaViewer({ file }: { file: EasyEdaFileData }) {
   }
 
   const result = state.result;
+
+  if (result.mode === 'pro') {
+    return <EasyEdaProView file={file} result={result} />;
+  }
+
   if (result.mode === 'json') {
     const isPcb = result.inspection.documentKind === 'pcb';
     const hasVisual = Boolean(result.visualDocument);
@@ -351,5 +411,201 @@ function formatBytes(value: number): string {
   if (value < 1024) return `${value} B`;
   if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function tryBuildProArchiveResult(
+  content: ArrayBuffer,
+  filename: string,
+  archiveFormat: 'EPRO' | 'ZIP' | 'EPROJECT'
+): Promise<EasyEdaReadResult | null> {
+  const archive = await extractEasyEdaProArchive(content);
+  const sheets = collectProSheets(archive);
+  if (sheets.length === 0) {
+    return null;
+  }
+
+  // Default to first PCB if any, otherwise first sheet.
+  let defaultIndex = sheets.findIndex((s) => s.documentKind === 'pcb');
+  if (defaultIndex < 0) defaultIndex = 0;
+
+  return {
+    mode: 'pro',
+    sourceLabel: `${archiveFormat} archive (${filename})`,
+    sheets,
+    defaultIndex,
+    summary: {
+      pcbCount: archive.pcbs.size,
+      sheetCount: archive.schematicSheets.size,
+      footprintCount: archive.footprints.size,
+      symbolCount: archive.symbols.size,
+    },
+  };
+}
+
+function collectProSheets(archive: ProArchive): ProSheetSelector[] {
+  const sheets: ProSheetSelector[] = [];
+
+  // PCBs
+  for (const [id, doc] of archive.pcbs) {
+    const matchedName = archive.projectInfo?.pcbs.find((entry) => entry.uuid === id)?.name ?? id;
+    const label = `PCB · ${matchedName}`;
+    sheets.push({
+      id: `pcb:${id}`,
+      label,
+      documentKind: 'pcb',
+      build: () => buildEasyEdaProPcbVisual(archive, doc, label),
+    });
+  }
+
+  // Schematic sheets ordered by project info if available.
+  const orderedSheetKeys: string[] = [];
+  if (archive.projectInfo) {
+    for (const sch of archive.projectInfo.schematics) {
+      for (const sheet of sch.sheets) {
+        const key = `${sch.uuid}/${sheet.id}`;
+        if (archive.schematicSheets.has(key)) {
+          orderedSheetKeys.push(key);
+        }
+      }
+    }
+  }
+  for (const key of archive.schematicSheets.keys()) {
+    if (!orderedSheetKeys.includes(key)) orderedSheetKeys.push(key);
+  }
+
+  for (const key of orderedSheetKeys) {
+    const doc = archive.schematicSheets.get(key);
+    if (!doc) continue;
+    const sheetInfo = findSheetInfo(archive, key);
+    const label = `Schematic · ${sheetInfo?.name ?? key}`;
+    sheets.push({
+      id: `sch:${key}`,
+      label,
+      documentKind: 'schematic',
+      build: () => buildEasyEdaProSchematicVisual(archive, doc, label),
+    });
+  }
+
+  return sheets;
+}
+
+function findSheetInfo(
+  archive: ProArchive,
+  key: string
+): { name: string; schematic: string } | null {
+  if (!archive.projectInfo) return null;
+  const [schUuid, sheetId] = key.split('/');
+  const sch = archive.projectInfo.schematics.find((s) => s.uuid === schUuid);
+  if (!sch) return null;
+  const sheet = sch.sheets.find((s) => String(s.id) === sheetId || s.uuid === sheetId);
+  if (!sheet) return null;
+  return { name: sheet.name, schematic: sch.name };
+}
+
+function buildProDocumentResult(
+  doc: ProDocument,
+  filename: string,
+  fileType: EasyEdaFileData['type']
+): EasyEdaReadResult {
+  // Build a one-sheet "pro" result from a standalone .esch / .epcb file.
+  const archive: ProArchive = {
+    projectInfo: null,
+    pcbs: new Map(),
+    schematicSheets: new Map(),
+    footprints: new Map(),
+    symbols: new Map(),
+  };
+
+  const isPcb = fileType === 'easyeda_epcb' || /^pcb$/i.test(doc.docType);
+  const sheet: ProSheetSelector = isPcb
+    ? {
+        id: 'pcb:standalone',
+        label: filename,
+        documentKind: 'pcb',
+        build: () => buildEasyEdaProPcbVisual(archive, doc, filename),
+      }
+    : {
+        id: 'sch:standalone',
+        label: filename,
+        documentKind: 'schematic',
+        build: () => buildEasyEdaProSchematicVisual(archive, doc, filename),
+      };
+
+  return {
+    mode: 'pro',
+    sourceLabel: isPcb
+      ? 'EPCB (EasyEDA Pro PCB)'
+      : 'ESCH (EasyEDA Pro schematic)',
+    sheets: [sheet],
+    defaultIndex: 0,
+    summary: {
+      pcbCount: isPcb ? 1 : 0,
+      sheetCount: isPcb ? 0 : 1,
+      footprintCount: 0,
+      symbolCount: 0,
+    },
+  };
+}
+
+interface EasyEdaProViewProps {
+  file: EasyEdaFileData;
+  result: Extract<EasyEdaReadResult, { mode: 'pro' }>;
+}
+
+function EasyEdaProView({ file, result }: EasyEdaProViewProps) {
+  const [selectedIndex, setSelectedIndex] = useState(result.defaultIndex);
+  const sheet = result.sheets[selectedIndex] ?? result.sheets[0];
+
+  const document = useMemo(() => sheet.build(), [sheet]);
+
+  return (
+    <div className="easyeda-viewer easyeda-pcb-fullscreen">
+      <div className="easyeda-summary easyeda-pro-summary">
+        <h3>{file.name}</h3>
+        <p>
+          Source: <strong>{result.sourceLabel}</strong>{' '}
+          | PCBs: <strong>{result.summary.pcbCount}</strong>{' '}
+          | Sheets: <strong>{result.summary.sheetCount}</strong>{' '}
+          | Footprints: <strong>{result.summary.footprintCount}</strong>{' '}
+          | Symbols: <strong>{result.summary.symbolCount}</strong>
+        </p>
+        {result.sheets.length > 1 && (
+          <div className="easyeda-pro-sheets">
+            {result.sheets.map((s, idx) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`easyeda-pro-sheet-btn ${idx === selectedIndex ? 'active' : ''}`}
+                onClick={() => setSelectedIndex(idx)}
+              >
+                {documentKindIcon(s.documentKind)} {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {document && (
+          <p className="easyeda-muted">
+            Rendered primitives: <strong>{document.primitives.length}</strong> (from{' '}
+            <strong>{document.shapeCount}</strong> rows)
+            {document.unknownShapePrefixes.length > 0 && (
+              <>
+                {' · Unhandled: '}
+                {document.unknownShapePrefixes.slice(0, 8).join(', ')}
+                {document.unknownShapePrefixes.length > 8 ? ', ...' : ''}
+              </>
+            )}
+          </p>
+        )}
+      </div>
+      {document ? (
+        <EasyEdaCanvasView document={document} />
+      ) : (
+        <div className="easyeda-viewer-error">
+          <div className="error-icon">!</div>
+          <p>This sheet could not be rendered. The format may use unsupported primitives.</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
