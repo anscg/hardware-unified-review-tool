@@ -121,7 +121,7 @@ async function renderGerberToSvg(gerberString: string, id: string): Promise<stri
   const parser = createParser();
   parser.feed(gerberString);
   const syntaxTree = parser.results();
-  const imageTree = plot(syntaxTree);
+  const imageTree = plot(syntaxTree as any);
   const svgTree = render(imageTree) as unknown as HastNode;
 
   if (!svgTree.properties) {
