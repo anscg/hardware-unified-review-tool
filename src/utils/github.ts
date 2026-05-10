@@ -201,13 +201,15 @@ export async function fetchFileContent(
       }
       const [, owner, repo] = rawUrlMatch;
 
+      // GitHub's LFS batch endpoint does not send CORS headers, so we go
+      // through our serverless proxy at /api/lfs-batch.
       const batchResponse = await fetch(
-        `https://github.com/${owner}/${repo}.git/info/lfs/objects/batch`,
+        `/api/lfs-batch?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`,
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/vnd.git-lfs+json',
-            Accept: 'application/vnd.git-lfs+json',
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
           },
           signal,
           body: JSON.stringify({
