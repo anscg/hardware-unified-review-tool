@@ -4,13 +4,22 @@ import { fetchFileContent } from '../utils/github';
 
 interface KiCadViewerProps {
   fileUrl: string;
+  filePath: string;
   fileName: string;
   resolverMap: Map<string, string>;
 }
 
-export default function KiCadViewer({ fileUrl, fileName, resolverMap }: KiCadViewerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export default function KiCadViewer({ fileUrl, filePath, fileName, resolverMap }: KiCadViewerProps) {
+  // mountRef is owned imperatively by us. React MUST NOT render any children
+  // into it, otherwise reconciliation can wipe out the <kicanvas-embed> we
+  // append, which causes the viewer to re-create itself and reset back to the
+  // root schematic page on every store-induced re-render.
+  const mountRef = useRef<HTMLDivElement>(null);
   const embedRef = useRef<HTMLElement | null>(null);
+  // Hold the latest resolverMap in a ref so the effect doesn't re-run (and
+  // tear down the embed) just because zustand handed back a fresh object.
+  const resolverMapRef = useRef(resolverMap);
+  resolverMapRef.current = resolverMap;
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,8 +31,9 @@ export default function KiCadViewer({ fileUrl, fileName, resolverMap }: KiCadVie
   }, []);
 
   useEffect(() => {
-    if (!ready || !containerRef.current) return;
+    if (!ready || !mountRef.current) return;
 
+    const resolverMap = resolverMapRef.current;
     let cancelled = false;
 
     async function loadFile() {
@@ -39,46 +49,47 @@ export default function KiCadViewer({ fileUrl, fileName, resolverMap }: KiCadVie
 
         // Hierarchical KiCad schematics reference subsheets by relative
         // filename (e.g. (property "Sheetfile" "usb.kicad_sch")). KiCanvas's
-        // inline filesystem only contains the files we explicitly provide;
-        // its `custom_resolver` is consulted only for URL-based sources, not
-        // for inline ones. So we must prefetch every related .kicad_sch /
-        // .kicad_pro in the same directory and inline them all.
-        const rootPath = findRootPath(resolverMap, fileUrl);
-        const dirPrefix = rootPath ? rootPath.replace(/[^/]*$/, '') : '';
-
-        const relatedExt = /\.(kicad_sch|kicad_pro)$/i;
-        const relatedFiles = new Map<string, string>(); // basename -> rawUrl
-        for (const [key, url] of resolverMap) {
-          if (key.includes('/')) continue; // we already index basename + path; basename keys suffice
-          if (!relatedExt.test(key)) continue;
-          // Restrict to the same directory as the root file when known.
-          const path = findPathForBasename(resolverMap, key);
-          if (dirPrefix && path && !path.startsWith(dirPrefix)) continue;
-          relatedFiles.set(key, url);
-        }
-        // Always include the root file itself.
-        relatedFiles.set(fileName, fileUrl);
-
-        // Fetch all related files in parallel. The root one is already loaded.
+        // Project.load() looks those up in its inline VFS by that exact
+        // (basename) string, so we register inline sources by basename.
+        //
+        // We only inline sheets that are *descendants* of the user-selected
+        // root. If we preload every sibling schematic in the directory,
+        // KiCanvas's hierarchy walk identifies the topmost ancestor as the
+        // root and the embed jumps there on load — making every file in the
+        // project look identical to its top-level parent.
+        const rootSourceName = fileName;
         const fetchedSources = new Map<string, string>();
-        fetchedSources.set(fileName, rootText);
-        const fetchTasks: Promise<void>[] = [];
-        for (const [name, url] of relatedFiles) {
-          if (fetchedSources.has(name)) continue;
-          fetchTasks.push(
-            (async () => {
-              try {
-                const buf = await fetchFileContent(url);
-                fetchedSources.set(name, new TextDecoder().decode(buf));
-              } catch (e) {
-                // A missing/failed subsheet shouldn't block the whole render;
-                // KiCanvas will warn for any sheet it can't resolve.
-                console.warn(`Failed to prefetch related KiCad file ${name}:`, e);
-              }
-            })()
-          );
-        }
-        await Promise.all(fetchTasks);
+        fetchedSources.set(rootSourceName, rootText);
+
+        const visit = async (text: string) => {
+          const refs = extractSheetfileRefs(text);
+          const tasks: Promise<void>[] = [];
+          for (const ref of refs) {
+            if (fetchedSources.has(ref)) continue;
+            const url = resolverMap.get(ref);
+            if (!url) {
+              console.warn(`KiCad subsheet ${ref} not found in repository`);
+              continue;
+            }
+            // Mark before await to avoid duplicate fetches across parallel tasks.
+            fetchedSources.set(ref, '');
+            tasks.push(
+              (async () => {
+                try {
+                  const buf = await fetchFileContent(url);
+                  const subText = new TextDecoder().decode(buf);
+                  fetchedSources.set(ref, subText);
+                  await visit(subText);
+                } catch (e) {
+                  fetchedSources.delete(ref);
+                  console.warn(`Failed to prefetch subsheet ${ref}:`, e);
+                }
+              })()
+            );
+          }
+          await Promise.all(tasks);
+        };
+        await visit(rootText);
 
         if (cancelled) return;
 
@@ -110,13 +121,13 @@ export default function KiCadViewer({ fileUrl, fileName, resolverMap }: KiCadVie
           source.textContent = text;
           embed.appendChild(source);
         };
-        appendSource(fileName, rootText);
+        appendSource(rootSourceName, rootText);
         for (const [name, text] of fetchedSources) {
-          if (name === fileName) continue;
+          if (name === rootSourceName) continue;
           appendSource(name, text);
         }
 
-        containerRef.current!.appendChild(embed);
+        mountRef.current!.appendChild(embed);
         embedRef.current = embed;
         setLoading(false);
       } catch (err) {
@@ -136,7 +147,10 @@ export default function KiCadViewer({ fileUrl, fileName, resolverMap }: KiCadVie
         embedRef.current = null;
       }
     };
-  }, [ready, fileUrl, fileName, resolverMap]);
+    // Intentionally NOT depending on resolverMap: it's read via a ref so a new
+    // Map instance from zustand doesn't tear down and rebuild the embed (which
+    // would reset the active schematic page back to root every time).
+  }, [ready, fileUrl, filePath, fileName]);
 
   if (error) {
     return (
@@ -148,41 +162,32 @@ export default function KiCadViewer({ fileUrl, fileName, resolverMap }: KiCadVie
   }
 
   return (
-    <div ref={containerRef} className="kicad-viewer">
+    <div className="kicad-viewer">
+      {/* React-managed loading overlay – kept as a SIBLING of the mount node
+          so React's reconciliation never touches the embed's parent. */}
       {(!ready || loading) && (
         <div className="kicad-viewer-loading">
           <div className="spinner"></div>
           <p>Loading KiCad viewer…</p>
         </div>
       )}
+      {/* Imperative mount point for <kicanvas-embed>. React must never render
+          children into this node. */}
+      <div ref={mountRef} className="kicad-viewer-mount" />
     </div>
   );
 }
 
-// The resolver map (built in fetchRepositoryFiles) contains entries keyed
-// by both full repo path (e.g. "pcb/hackxpansion.kicad_sch") and basename
-// (e.g. "hackxpansion.kicad_sch"), both pointing at the raw URL. To find the
-// directory of the root file we need to recover its full path.
-function findRootPath(
-  resolverMap: Map<string, string>,
-  rootUrl: string
-): string | null {
-  for (const [key, url] of resolverMap) {
-    if (url === rootUrl && key.includes('/')) return key;
-  }
-  return null;
-}
-
-function findPathForBasename(
-  resolverMap: Map<string, string>,
-  basename: string
-): string | null {
-  const url = resolverMap.get(basename);
-  if (!url) return null;
-  for (const [key, candidate] of resolverMap) {
-    if (candidate === url && key.includes('/') && key.endsWith('/' + basename)) {
-      return key;
-    }
-  }
-  return null;
+// Extract the basenames referenced as subsheets from a KiCad schematic.
+// Matches forms like:
+//   (property "Sheetfile" "main_mcu.kicad_sch" ...)
+//   (sheetfile "main_mcu.kicad_sch")
+function extractSheetfileRefs(schText: string): string[] {
+  const refs = new Set<string>();
+  const propRe = /\(property\s+"Sheetfile"\s+"([^"]+\.kicad_sch)"/gi;
+  const bareRe = /\(sheetfile\s+"([^"]+\.kicad_sch)"/gi;
+  let m: RegExpExecArray | null;
+  while ((m = propRe.exec(schText))) refs.add(m[1]!);
+  while ((m = bareRe.exec(schText))) refs.add(m[1]!);
+  return Array.from(refs);
 }

@@ -1,0 +1,725 @@
+{
+  "sha": "e736e479d3f637499f5b3efc1b19be5282cad353",
+  "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/e736e479d3f637499f5b3efc1b19be5282cad353",
+  "tree": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50fe1231a9207118c5df7fa73ce257df9dadd66a",
+      "size": 49,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/50fe1231a9207118c5df7fa73ce257df9dadd66a"
+    },
+    {
+      "path": "firmware",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "75444074a8b3b57478f2350908e93d840ccd9d07",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/75444074a8b3b57478f2350908e93d840ccd9d07"
+    },
+    {
+      "path": "firmware/main_mcu",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1f997f1ad18055840eb17bd940dea68a5bd89b3d",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/1f997f1ad18055840eb17bd940dea68a5bd89b3d"
+    },
+    {
+      "path": "firmware/main_mcu/main_mcu.ioc",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e89b61657ed3720ebd93138b76a964ce62a62e8",
+      "size": 19237,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/1e89b61657ed3720ebd93138b76a964ce62a62e8"
+    },
+    {
+      "path": "firmware/peripheral_mcu",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "da49fd5abc6e354d73038b4754cd9863738ef9ff",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/da49fd5abc6e354d73038b4754cd9863738ef9ff"
+    },
+    {
+      "path": "firmware/peripheral_mcu/peripheral_mcu.ioc2",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d040ad830bfdb51b95d52dda00fd2eaddb3be272",
+      "size": 166450,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/d040ad830bfdb51b95d52dda00fd2eaddb3be272"
+    },
+    {
+      "path": "pcb",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d28661edc93670f578646a8bbd7463b4194730bb",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/d28661edc93670f578646a8bbd7463b4194730bb"
+    },
+    {
+      "path": "pcb/fets.kicad_sch",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec39dff1771115005dbb9c590f62eae92709d781",
+      "size": 161647,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/ec39dff1771115005dbb9c590f62eae92709d781"
+    },
+    {
+      "path": "pcb/fp-lib-table",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8735d3354ebf4aead64356bbe253a2a38e4e6f55",
+      "size": 1149,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/8735d3354ebf4aead64356bbe253a2a38e4e6f55"
+    },
+    {
+      "path": "pcb/irisv2.kicad_pcb",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c547853d1022cf34a8c228a9eda727e53adc422b",
+      "size": 78,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/c547853d1022cf34a8c228a9eda727e53adc422b"
+    },
+    {
+      "path": "pcb/irisv2.kicad_prl",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82a6cb7a3c3405b925776f9d7678753501cc0dd7",
+      "size": 2437,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/82a6cb7a3c3405b925776f9d7678753501cc0dd7"
+    },
+    {
+      "path": "pcb/irisv2.kicad_pro",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b75f836db01c506aa2dad73f56ad3221e78827be",
+      "size": 15502,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/b75f836db01c506aa2dad73f56ad3221e78827be"
+    },
+    {
+      "path": "pcb/irisv2.kicad_sch",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "24a972fd761c158925b1530fbd9586a52144a373",
+      "size": 181212,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/24a972fd761c158925b1530fbd9586a52144a373"
+    },
+    {
+      "path": "pcb/libraries",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8deec6a7a64fdc2e21ceecdd27bee19f48930227",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/8deec6a7a64fdc2e21ceecdd27bee19f48930227"
+    },
+    {
+      "path": "pcb/libraries/ATA6561",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "81c0e82169e125ab47be9509f49acaf0fc9ca7cb",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/81c0e82169e125ab47be9509f49acaf0fc9ca7cb"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/ATA6561-GAQW-N.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "de024d77fe6cc4e29398c24e7ec21a39abef920a",
+      "size": 3255,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/de024d77fe6cc4e29398c24e7ec21a39abef920a"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/ATA6561-GAQW-N.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84c6e05f0604ea398ba4ef9853ffbcabe4f3642c",
+      "size": 269,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/84c6e05f0604ea398ba4ef9853ffbcabe4f3642c"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/ATA6561-GAQW-N.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c21a01f9f0c10d73169705c20f65aeceac8a17f",
+      "size": 4141,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/2c21a01f9f0c10d73169705c20f65aeceac8a17f"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/ATA6561-GAQW-N.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e85b49ef41214388fa3a5c1581e758339777c36",
+      "size": 1304,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/9e85b49ef41214388fa3a5c1581e758339777c36"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/ATA6561-GAQW-N.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3394319891e8f70de3a14843946433cc2401e768",
+      "size": 1533,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/3394319891e8f70de3a14843946433cc2401e768"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/ATA6561-GAQW-N.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7baee3cc72474069482bea60cb5476d8644b9dfc",
+      "size": 433045,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/7baee3cc72474069482bea60cb5476d8644b9dfc"
+    },
+    {
+      "path": "pcb/libraries/ATA6561/SOIC127P600X175-8N.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3aaa15e131e0dc8ae64ffe88c5cf512a19524213",
+      "size": 2300,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/3aaa15e131e0dc8ae64ffe88c5cf512a19524213"
+    },
+    {
+      "path": "pcb/libraries/BMP581",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f06f111c4b4dd5c946ab8186973e03c2246c6ee3",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/f06f111c4b4dd5c946ab8186973e03c2246c6ee3"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "75662ab067fb5a6d8f2913b93343f03cb502ac87",
+      "size": 4551,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/75662ab067fb5a6d8f2913b93343f03cb502ac87"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f89917cfc0eec093563b9ccaeb5edc4d6476222a",
+      "size": 250,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/f89917cfc0eec093563b9ccaeb5edc4d6476222a"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14eb4cda4ace31d92fa12f5515d01edc6459ec6d",
+      "size": 2292,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/14eb4cda4ace31d92fa12f5515d01edc6459ec6d"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b07606781f7a9953ad08eb9a0b4da9e0d7162139",
+      "size": 4551,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/b07606781f7a9953ad08eb9a0b4da9e0d7162139"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e0c72af1ebea2b4114363a2fc290540507d5a4e",
+      "size": 1316,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/1e0c72af1ebea2b4114363a2fc290540507d5a4e"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65f2d29eca8ab175beb3602382053a944e01147b",
+      "size": 1560,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/65f2d29eca8ab175beb3602382053a944e01147b"
+    },
+    {
+      "path": "pcb/libraries/BMP581/BMP581.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f483ba359f6c84cb63d8952e52ccaf0325595370",
+      "size": 240482,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/f483ba359f6c84cb63d8952e52ccaf0325595370"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "69cb09c56ef7a312435cc822b71445b05e86f0ef",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/69cb09c56ef7a312435cc822b71445b05e86f0ef"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN/ECS-TXO-32CSMV-320-AN-TR.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b397318c7a8bac257d00b33ad5d8fe9a633ebf54",
+      "size": 265,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/b397318c7a8bac257d00b33ad5d8fe9a633ebf54"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN/ECS-TXO-32CSMV-320-AN-TR.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ea0fb35f3c258763da82963bca14747e0e66d4de",
+      "size": 2582,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/ea0fb35f3c258763da82963bca14747e0e66d4de"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN/ECS-TXO-32CSMV-320-AN-TR.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "00271dbf192964ecd7086b4508d4c746251dbe5e",
+      "size": 1197,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/00271dbf192964ecd7086b4508d4c746251dbe5e"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN/ECS-TXO-32CSMV-320-AN-TR.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06a8664874501bc752b117485a1e053c6040061b",
+      "size": 1156,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/06a8664874501bc752b117485a1e053c6040061b"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN/ECS-TXO-32CSMV-320-AN-TR.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "82c67e127ee0138c780796511aef1afa061d9e2e",
+      "size": 78634,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/82c67e127ee0138c780796511aef1afa061d9e2e"
+    },
+    {
+      "path": "pcb/libraries/ECS-TXO-32CSMV-320-AN/ECSTXO32CSMV320ANTR.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2ca369977e724f46f4ee259eded2a7235a934fa4",
+      "size": 1865,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/2ca369977e724f46f4ee259eded2a7235a934fa4"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1834f7bbb79ee9cbf1ae39d886c8c3c46f18e683",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/1834f7bbb79ee9cbf1ae39d886c8c3c46f18e683"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR/H3LIS331DLTR.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a8bc511ce14fa6fb5400368d0701c346765b3d12",
+      "size": 202,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/a8bc511ce14fa6fb5400368d0701c346765b3d12"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR/H3LIS331DLTR.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7207223da3787c489984a8b65dc0e8a3642541f7",
+      "size": 4601,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/7207223da3787c489984a8b65dc0e8a3642541f7"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR/H3LIS331DLTR.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d0ed09848dd68f3a6e9f217686f94860090543a7",
+      "size": 1555,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/d0ed09848dd68f3a6e9f217686f94860090543a7"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR/H3LIS331DLTR.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0a2dcb63b661bb146450bacc5644b8f57b638f5",
+      "size": 2715,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/c0a2dcb63b661bb146450bacc5644b8f57b638f5"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR/H3LIS331DLTR.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e3d3359bde5d46bd9cf153a6040c338795eb4799",
+      "size": 394672,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/e3d3359bde5d46bd9cf153a6040c338795eb4799"
+    },
+    {
+      "path": "pcb/libraries/H3LIS331DLTR/LIS3DHTR.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bee4437166d14edb68a52dc674309c293d3aa5d1",
+      "size": 4292,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/bee4437166d14edb68a52dc674309c293d3aa5d1"
+    },
+    {
+      "path": "pcb/libraries/ICM-45686",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1f6d97efa597fb746eec578d292a3256b950f016",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/1f6d97efa597fb746eec578d292a3256b950f016"
+    },
+    {
+      "path": "pcb/libraries/ICM-45686/ICM-45686.STEP",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0511806e3ddb37d77a9f8b19aba3f6c14c27b5c7",
+      "size": 359889,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/0511806e3ddb37d77a9f8b19aba3f6c14c27b5c7"
+    },
+    {
+      "path": "pcb/libraries/ICM-45686/footprints.pretty",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7c137a99ad3ad28f72e63feddcab7b11badd3d00",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/7c137a99ad3ad28f72e63feddcab7b11badd3d00"
+    },
+    {
+      "path": "pcb/libraries/ICM-45686/footprints.pretty/U_2p5X3X0p81_LGA14L_TDK.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2517370dc3b62b86b48a489d031336a899e6eea",
+      "size": 3302,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/f2517370dc3b62b86b48a489d031336a899e6eea"
+    },
+    {
+      "path": "pcb/libraries/ICM-45686/icm45686.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "caeb894e6d950ee823ab5d1ed5b12727e1b6dab3",
+      "size": 5476,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/caeb894e6d950ee823ab5d1ed5b12727e1b6dab3"
+    },
+    {
+      "path": "pcb/libraries/ICM-45686/icm45686.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ef6223ca122af6514182fe810859e01dfdea894b",
+      "size": 5507,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/ef6223ca122af6514182fe810859e01dfdea894b"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ffce5d3e5b06c5d2c49e800a28b2517286b16975",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/ffce5d3e5b06c5d2c49e800a28b2517286b16975"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L/MCAC011P03L-TP.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09510b6c6bdc7e85878c1c362e89e6a5424322fa",
+      "size": 180,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/09510b6c6bdc7e85878c1c362e89e6a5424322fa"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L/MCAC011P03L-TP.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d2cdfc2f792d7c08342bcdcbd809504c7cd43616",
+      "size": 3184,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/d2cdfc2f792d7c08342bcdcbd809504c7cd43616"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L/MCAC011P03L-TP.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5dc7d4ab2e8ca7801b81110606c9e530153373be",
+      "size": 1104,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/5dc7d4ab2e8ca7801b81110606c9e530153373be"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L/MCAC011P03L-TP.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "565e5e3c5fc73c834678c141a7eae7523158c058",
+      "size": 1635,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/565e5e3c5fc73c834678c141a7eae7523158c058"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L/MCAC011P03L-TP.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b052449c68d1fc12a0aab885d30b7c9865d135da",
+      "size": 350135,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/b052449c68d1fc12a0aab885d30b7c9865d135da"
+    },
+    {
+      "path": "pcb/libraries/MCAC011P03L/MCAC100N08YATP.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a05d2e47519e39e9c2d8cc786023a3801e8ef6c9",
+      "size": 2492,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/a05d2e47519e39e9c2d8cc786023a3801e8ef6c9"
+    },
+    {
+      "path": "pcb/libraries/MMC5983MA",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4eaf83fa6140f36e300feef9581ae74baaa291bc",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/4eaf83fa6140f36e300feef9581ae74baaa291bc"
+    },
+    {
+      "path": "pcb/libraries/MMC5983MA/MMC5983MA_MEM.step",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "15472d65c068e4063bb68640672853b13b744910",
+      "size": 143636,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/15472d65c068e4063bb68640672853b13b744910"
+    },
+    {
+      "path": "pcb/libraries/MMC5983MA/footprints.pretty",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "fcfc3e84b8aa53ce1a2c95fe95347f0946a7f43c",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/fcfc3e84b8aa53ce1a2c95fe95347f0946a7f43c"
+    },
+    {
+      "path": "pcb/libraries/MMC5983MA/footprints.pretty/MMC5983MA_MEM.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "10bdc9742f8f4a9e980d3a89fb9b4f2ef912ce55",
+      "size": 5354,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/10bdc9742f8f4a9e980d3a89fb9b4f2ef912ce55"
+    },
+    {
+      "path": "pcb/libraries/MMC5983MA/mmc5983ma.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b7d6e876163bd3d96cf69aa71f9eabfe08849717",
+      "size": 4661,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/b7d6e876163bd3d96cf69aa71f9eabfe08849717"
+    },
+    {
+      "path": "pcb/libraries/MMC5983MA/mmc5983ma.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "435bb5a5e0ee1f3f55978e510d3f79b31a5b70ce",
+      "size": 5850,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/435bb5a5e0ee1f3f55978e510d3f79b31a5b70ce"
+    },
+    {
+      "path": "pcb/libraries/MPM4323GDE",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "87ee5c728a23634e8ed0f648ca6f3ed4df0e6994",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/87ee5c728a23634e8ed0f648ca6f3ed4df0e6994"
+    },
+    {
+      "path": "pcb/libraries/MPM4323GDE/MPM4323GDE.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98d931c1bf16301a7d6826ff8a658faace38a50a",
+      "size": 4047,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/98d931c1bf16301a7d6826ff8a658faace38a50a"
+    },
+    {
+      "path": "pcb/libraries/MPM4323GDE/footprints.pretty",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5e35c6286ac49ae3c602a616a352de3cce50a00f",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/5e35c6286ac49ae3c602a616a352de3cce50a00f"
+    },
+    {
+      "path": "pcb/libraries/MPM4323GDE/footprints.pretty/QFN-12_MP4323_MNP.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6f67b7cf9a65d76bdf8d45a6f31e9fdd4715c7d7",
+      "size": 4720,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/6f67b7cf9a65d76bdf8d45a6f31e9fdd4715c7d7"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8f3822da30adbb822fd4ef5ac6e6619c41cdbb37",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/8f3822da30adbb822fd4ef5ac6e6619c41cdbb37"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010/S25FL256LAGNFI010.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c32fd3ca3acb353d93c8fc93bad2bc61e4edb159",
+      "size": 359,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/c32fd3ca3acb353d93c8fc93bad2bc61e4edb159"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010/S25FL256LAGNFI010.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "404af6d4c591215906e2d875764e40aec2e4edcc",
+      "size": 3541,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/404af6d4c591215906e2d875764e40aec2e4edcc"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010/S25FL256LAGNFI010.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c99f2664e97e968523cb8f849701a48ae499cdf0",
+      "size": 1469,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/c99f2664e97e968523cb8f849701a48ae499cdf0"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010/S25FL256LAGNFI010.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8de872dcd16a4e37edbfaae1c9727ec5d5293e2b",
+      "size": 1507,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/8de872dcd16a4e37edbfaae1c9727ec5d5293e2b"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010/S25FL256LAGNFI010.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2e3cfb03ee75144f7ac0239ee1278455d356133",
+      "size": 179669,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/e2e3cfb03ee75144f7ac0239ee1278455d356133"
+    },
+    {
+      "path": "pcb/libraries/S25FL256LAGNFI010/SON127P800X600X80-9N-D.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "88e567a1ba86007d4d0ea6599ffc5ef2fda989e6",
+      "size": 2093,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/88e567a1ba86007d4d0ea6599ffc5ef2fda989e6"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "54fb7c705541dfc742d39abbd989ab62c35ba18c",
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/trees/54fb7c705541dfc742d39abbd989ab62c35ba18c"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME/QFP50P1400X1400X160-80N.kicad_mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4cbef6302a59d5d7694f00c2e41ffdd401502379",
+      "size": 8544,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/4cbef6302a59d5d7694f00c2e41ffdd401502379"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME/STM32C552MET6.dcm",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a6795259f9c65ea608deb7c254568f6d41a393de",
+      "size": 263,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/a6795259f9c65ea608deb7c254568f6d41a393de"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME/STM32C552MET6.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c73c7769f914624dfdd5312149318077b5bfbe05",
+      "size": 15647,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/c73c7769f914624dfdd5312149318077b5bfbe05"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME/STM32C552MET6.lib",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2bcdda35b7c82d9488deac917f1daa89148ab912",
+      "size": 3968,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/2bcdda35b7c82d9488deac917f1daa89148ab912"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME/STM32C552MET6.mod",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc7ea7cf79ed4df946f38a9ea9e6f1419adcd33e",
+      "size": 7820,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/cc7ea7cf79ed4df946f38a9ea9e6f1419adcd33e"
+    },
+    {
+      "path": "pcb/libraries/STM32C552ME/STM32C552MET6.stp",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "10c1944d9efdbe581314541cc26c382f83ef0e91",
+      "size": 3778018,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/10c1944d9efdbe581314541cc26c382f83ef0e91"
+    },
+    {
+      "path": "pcb/libraries/alnd-wb-0013-t.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bf7c5bbd344b2109910ac1fd473116b2fa0127ba",
+      "size": 102,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/bf7c5bbd344b2109910ac1fd473116b2fa0127ba"
+    },
+    {
+      "path": "pcb/libraries/alnd-wb-0013-t.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "99a56b8cb5b070663483433962379d4948b28264",
+      "size": 2428,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/99a56b8cb5b070663483433962379d4948b28264"
+    },
+    {
+      "path": "pcb/libraries/lr2021.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dcaf86fb47cb948629267f829d119219d1947ca1",
+      "size": 9108,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/dcaf86fb47cb948629267f829d119219d1947ca1"
+    },
+    {
+      "path": "pcb/libraries/lr2021_new.bak",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bf7c5bbd344b2109910ac1fd473116b2fa0127ba",
+      "size": 102,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/bf7c5bbd344b2109910ac1fd473116b2fa0127ba"
+    },
+    {
+      "path": "pcb/libraries/lr2021_new.kicad_sym",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95f6cb9dd021585c5015a106930ce711bc111224",
+      "size": 9072,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/95f6cb9dd021585c5015a106930ce711bc111224"
+    },
+    {
+      "path": "pcb/main_mcu.kicad_sch",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "deba651df56ce21d23306a5839337553accf3cc4",
+      "size": 254410,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/deba651df56ce21d23306a5839337553accf3cc4"
+    },
+    {
+      "path": "pcb/peripheral_mcu.kicad_sch",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c7de1068c383ce232914b29a7c41a0fc8faa2eb",
+      "size": 182947,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/9c7de1068c383ce232914b29a7c41a0fc8faa2eb"
+    },
+    {
+      "path": "pcb/rf.kicad_sch",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c69cd4b960edde1a37f8465bd0a5fe88420623a0",
+      "size": 205990,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/c69cd4b960edde1a37f8465bd0a5fe88420623a0"
+    },
+    {
+      "path": "pcb/sensors.kicad_sch",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "745aa545b6ea3ce7e7221351b428f51626695f6b",
+      "size": 127658,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/745aa545b6ea3ce7e7221351b428f51626695f6b"
+    },
+    {
+      "path": "pcb/sym-lib-table",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "11e269c171041470bf74cc9fc1a66a7fa89c06d2",
+      "size": 1584,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/11e269c171041470bf74cc9fc1a66a7fa89c06d2"
+    },
+    {
+      "path": "todo",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "68c684f59e676a0de39163f3d2aad650a3d9dd73",
+      "size": 1116,
+      "url": "https://api.github.com/repos/teletype7/IRIS-v2/git/blobs/68c684f59e676a0de39163f3d2aad650a3d9dd73"
+    }
+  ],
+  "truncated": false
+}

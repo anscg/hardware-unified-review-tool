@@ -108,7 +108,12 @@ function App() {
         <main className="main-content">
           {selectedFile ? (
             selectedFile.kind === 'kicad' ? (
-              <KiCadViewer fileUrl={selectedFile.url} fileName={selectedFile.name} resolverMap={resolverMap} />
+              <KiCadViewer
+                fileUrl={selectedFile.url}
+                filePath={selectedFile.path}
+                fileName={selectedFile.name}
+                resolverMap={resolverMap}
+              />
             ) : selectedFile.kind === 'easyeda' ? (
               <EasyEdaViewer file={selectedFile} />
             ) : selectedFile.kind === 'gerber' ? (
