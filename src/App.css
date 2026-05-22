@@ -1246,6 +1246,24 @@
   line-height: 1.6;
 }
 
+.landing-credits {
+  margin-top: 2rem;
+  color: var(--fg-muted);
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.landing-credits-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.landing-credits-link:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
 /* ── Scrollbar ── */
 
 ::-webkit-scrollbar {

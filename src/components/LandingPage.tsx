@@ -103,6 +103,7 @@ export default function LandingPage({ onLoaded }: { onLoaded: () => void }) {
           Supports STL, STEP, OBJ, GLTF, PLY, 3MF, KiCad, EasyEDA, and Gerber
           files.
         </p>
+        <p className="landing-credits">Made by <a href="https://github.com/TaniWanKenobi/" target="_blank" rel="noopener noreferrer" className="landing-credits-link">Tanishq Goyal</a></p>
       </div>
     </div>
   );
