@@ -358,7 +358,7 @@ export default function ModelViewer() {
           const parseElapsedSeconds = (performance.now() - parseStart) / 1000;
           updateProcessingEstimate(
             processingProfile,
-            fileSizeBytes > 0 ? fileSizeBytes : content.byteLength,
+            content.byteLength,
             parseElapsedSeconds
           );
           clearEtaCountdown();

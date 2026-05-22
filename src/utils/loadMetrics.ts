@@ -18,6 +18,9 @@ const DEFAULT_METRICS: LoadMetricsData = {
   },
 };
 
+// Ceiling guards against LFS pointer-size miscalculation corrupting stored rates.
+const MAX_PROCESSING_SEC_PER_MB = 300;
+
 let cachedMetrics: LoadMetricsData | null = null;
 
 function canUseStorage(): boolean {
@@ -60,15 +63,15 @@ function loadMetrics(): LoadMetricsData {
       processingSecPerMb: {
         'server-step':
           typeof parsed.processingSecPerMb?.['server-step'] === 'number'
-            ? Math.max(parsed.processingSecPerMb['server-step'], 0.05)
+            ? Math.min(Math.max(parsed.processingSecPerMb['server-step'], 0.05), MAX_PROCESSING_SEC_PER_MB)
             : defaults.processingSecPerMb['server-step'],
         'client-step':
           typeof parsed.processingSecPerMb?.['client-step'] === 'number'
-            ? Math.max(parsed.processingSecPerMb['client-step'], 0.05)
+            ? Math.min(Math.max(parsed.processingSecPerMb['client-step'], 0.05), MAX_PROCESSING_SEC_PER_MB)
             : defaults.processingSecPerMb['client-step'],
         'model-generic':
           typeof parsed.processingSecPerMb?.['model-generic'] === 'number'
-            ? Math.max(parsed.processingSecPerMb['model-generic'], 0.05)
+            ? Math.min(Math.max(parsed.processingSecPerMb['model-generic'], 0.05), MAX_PROCESSING_SEC_PER_MB)
             : defaults.processingSecPerMb['model-generic'],
       },
     };
@@ -128,9 +131,13 @@ export function updateProcessingEstimate(
   const sampleSecPerMb = elapsedSeconds / (fileSizeBytes / MB);
   if (!Number.isFinite(sampleSecPerMb) || sampleSecPerMb <= 0) return;
 
+  if (sampleSecPerMb > MAX_PROCESSING_SEC_PER_MB) return;
   const metrics = loadMetrics();
   const previous = metrics.processingSecPerMb[profile] ?? DEFAULT_METRICS.processingSecPerMb[profile];
-  metrics.processingSecPerMb[profile] = Math.max(0.05, ewma(previous, sampleSecPerMb));
+  metrics.processingSecPerMb[profile] = Math.min(
+    MAX_PROCESSING_SEC_PER_MB,
+    Math.max(0.05, ewma(previous, sampleSecPerMb))
+  );
   persistMetrics(metrics);
 }
 

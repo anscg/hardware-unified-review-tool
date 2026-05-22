@@ -84,6 +84,7 @@ export default async function handler(req: Request): Promise<Response> {
   const upstream = await fetch(parsedTarget.toString(), {
     method: req.method,
     headers: forwardHeaders,
+    signal: AbortSignal.timeout(60_000),
   });
 
   const responseHeaders: Record<string, string> = { ...CORS_HEADERS };

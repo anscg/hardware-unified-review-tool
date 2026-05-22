@@ -416,14 +416,6 @@ async function loadOBJ(
       
       object.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          // Always set our default purple material
-          child.material = new THREE.MeshStandardMaterial({ 
-            color: 0xc084fc,
-            metalness: 0.1,
-            roughness: 0.7,
-            side: THREE.DoubleSide
-          });
-          
           components.push({
             id: `obj-${idx}`,
             name: child.name || `Component ${idx}`,
@@ -464,14 +456,6 @@ async function loadGLTF(
         
         scene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
-            // Always set our default purple material.
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xc084fc,
-              metalness: 0.1,
-              roughness: 0.7,
-              side: THREE.DoubleSide
-            });
-            
             components.push({
               id: `gltf-${idx}`,
               name: child.name || `Component ${idx}`,
@@ -504,12 +488,13 @@ async function loadPLY(
   return new Promise((resolve, reject) => {
     try {
       const geometry = loader.parse(content);
-      const material = new THREE.MeshStandardMaterial({ 
-        color: 0xc084fc,
+      const hasVertexColors = !!geometry.attributes.color;
+      const material = new THREE.MeshStandardMaterial({
+        color: hasVertexColors ? 0xffffff : 0xc084fc,
         metalness: 0.1,
         roughness: 0.7,
         side: THREE.DoubleSide,
-        vertexColors: true
+        vertexColors: hasVertexColors
       });
       const mesh = new THREE.Mesh(geometry, material);
       
@@ -551,14 +536,6 @@ async function load3MF(
       
       object.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          // Always set our default purple material
-          child.material = new THREE.MeshStandardMaterial({ 
-            color: 0xc084fc,
-            metalness: 0.1,
-            roughness: 0.7,
-            side: THREE.DoubleSide
-          });
-          
           components.push({
             id: `3mf-${idx}`,
             name: child.name || `Component ${idx}`,
@@ -795,7 +772,7 @@ async function loadSTEP(
         void setStepCacheValue(cacheKey, result);
       }
     }
-    
+
     if (!result.success || !result.meshes || result.meshes.length === 0) {
       throw new Error('Failed to parse STEP file or no geometry found');
     }

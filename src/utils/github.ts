@@ -8,6 +8,21 @@ import type {
 
 const GITHUB_API_BASE = 'https://api.github.com';
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com';
+
+// Combines an optional external AbortSignal with a timeout so neither is ignored.
+function makeSignal(timeoutMs: number, external?: AbortSignal): AbortSignal {
+  if (!external) return AbortSignal.timeout(timeoutMs);
+  const controller = new AbortController();
+  const tid = setTimeout(
+    () => controller.abort(new DOMException('Timeout', 'TimeoutError')),
+    timeoutMs
+  );
+  const onExternal = () => { clearTimeout(tid); controller.abort(external.reason); };
+  if (external.aborted) { onExternal(); } else {
+    external.addEventListener('abort', onExternal, { once: true });
+  }
+  return controller.signal;
+}
 const MODEL_EXTENSIONS = ['.stl', '.step', '.stp', '.obj', '.gltf', '.glb', '.ply', '.3mf'];
 const KICAD_EXTENSIONS = ['.kicad_sch', '.kicad_pcb', '.kicad_prj', '.kicad_wks'];
 const EASYEDA_EXTENSIONS = ['.json', '.epro', '.eproproject', '.esch', '.epcb', '.zip'];
@@ -151,7 +166,7 @@ async function fetchGitTree(owner: string, repo: string, branch: string): Promis
   const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${encodeURIComponent(
     branch
   )}?recursive=1`;
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: makeSignal(30_000) });
 
   if (!response.ok) {
     throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
@@ -162,7 +177,7 @@ async function fetchGitTree(owner: string, repo: string, branch: string): Promis
 
 async function fetchDefaultBranch(owner: string, repo: string): Promise<string | null> {
   try {
-    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}`);
+    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}`, { signal: makeSignal(30_000) });
     if (!response.ok) return null;
     const data = await response.json();
     return typeof data?.default_branch === 'string' ? data.default_branch : null;
@@ -176,7 +191,7 @@ export async function fetchFileContent(
   onProgress?: (loaded: number, total: number) => void,
   signal?: AbortSignal
 ): Promise<ArrayBuffer> {
-  const response = await fetch(url, { signal });
+  const response = await fetch(url, { signal: makeSignal(60_000, signal) });
   if (!response.ok) {
     throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
   }
@@ -211,7 +226,7 @@ export async function fetchFileContent(
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-          signal,
+          signal: makeSignal(30_000, signal),
           body: JSON.stringify({
             operation: 'download',
             transfers: ['basic'],
@@ -233,7 +248,7 @@ export async function fetchFileContent(
         throw new Error('LFS batch API did not return a download URL');
       }
 
-      return streamResponse(await fetch(downloadUrl, { signal }), size, onProgress);
+      return streamResponse(await fetch(downloadUrl, { signal: makeSignal(60_000, signal) }), size, onProgress);
     }
 
     // Not an LFS pointer - return the original bytes untouched.

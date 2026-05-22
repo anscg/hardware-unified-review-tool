@@ -8,6 +8,7 @@ import EasyEdaViewer from './components/EasyEdaViewer';
 import GerberViewer from './components/GerberViewer';
 import LoadingOverlay from './components/LoadingOverlay';
 import LandingPage from './components/LandingPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useStore } from './store/useStore';
 import { isGithubUrl, fetchRepositoryFiles } from './utils/github';
 import { Analytics } from '@vercel/analytics/react';
@@ -106,26 +107,28 @@ function App() {
         )}
 
         <main className="main-content">
-          {selectedFile ? (
-            selectedFile.kind === 'kicad' ? (
-              <KiCadViewer
-                fileUrl={selectedFile.url}
-                filePath={selectedFile.path}
-                fileName={selectedFile.name}
-                resolverMap={resolverMap}
-              />
-            ) : selectedFile.kind === 'easyeda' ? (
-              <EasyEdaViewer file={selectedFile} />
-            ) : selectedFile.kind === 'gerber' ? (
-              <GerberViewer file={selectedFile} />
+          <ErrorBoundary>
+            {selectedFile ? (
+              selectedFile.kind === 'kicad' ? (
+                <KiCadViewer
+                  fileUrl={selectedFile.url}
+                  filePath={selectedFile.path}
+                  fileName={selectedFile.name}
+                  resolverMap={resolverMap}
+                />
+              ) : selectedFile.kind === 'easyeda' ? (
+                <EasyEdaViewer file={selectedFile} />
+              ) : selectedFile.kind === 'gerber' ? (
+                <GerberViewer file={selectedFile} />
+              ) : (
+                <ModelViewer />
+              )
             ) : (
-              <ModelViewer />
-            )
-          ) : (
-            <div className="empty-state">
-              <p>Select a file from the sidebar</p>
-            </div>
-          )}
+              <div className="empty-state">
+                <p>Select a file from the sidebar</p>
+              </div>
+            )}
+          </ErrorBoundary>
         </main>
       </div>
 

@@ -255,7 +255,7 @@ async function getOcct(): Promise<any> {
 }
 
 async function fetchStepBytes(rawUrl: string): Promise<Buffer> {
-  const response = await fetch(rawUrl);
+  const response = await fetch(rawUrl, { signal: AbortSignal.timeout(60_000) });
   if (!response.ok) {
     throw new Error(`Failed to fetch STEP source: ${response.status} ${response.statusText}`);
   }
@@ -303,6 +303,7 @@ async function fetchLfsPayload(rawUrl: string, pointerText: string): Promise<Buf
         transfers: ['basic'],
         objects: [{ oid, size }],
       }),
+      signal: AbortSignal.timeout(30_000),
     }
   );
 
@@ -318,7 +319,7 @@ async function fetchLfsPayload(rawUrl: string, pointerText: string): Promise<Buf
     throw new Error('LFS batch API did not return a download URL');
   }
 
-  const fileResponse = await fetch(downloadUrl);
+  const fileResponse = await fetch(downloadUrl, { signal: AbortSignal.timeout(60_000) });
   if (!fileResponse.ok) {
     throw new Error(`Failed to download LFS object: ${fileResponse.status}`);
   }

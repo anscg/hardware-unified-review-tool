@@ -93,6 +93,7 @@ export default async function handler(
         Accept: 'application/vnd.git-lfs+json',
       },
       body: bodyString,
+      signal: AbortSignal.timeout(30_000),
     });
 
     const text = await upstreamRes.text();
