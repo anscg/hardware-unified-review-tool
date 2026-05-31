@@ -47,51 +47,60 @@ export default function KiCadViewer({ fileUrl, filePath, fileName, resolverMap }
 
         if (cancelled) return;
 
-        // Hierarchical KiCad schematics reference subsheets by relative
-        // filename (e.g. (property "Sheetfile" "usb.kicad_sch")). KiCanvas's
-        // inline filesystem only contains the files we explicitly provide;
-        // its `custom_resolver` is consulted only for URL-based sources, not
-        // for inline ones. So we must prefetch every related .kicad_sch /
-        // .kicad_pro in the same directory and inline them all.
+        // BFS from the selected schematic: only fetch sub-sheets it references
+        // (via Sheetfile properties), not parent or sibling files. Including
+        // parent schematics causes KiCanvas to root the project at the true
+        // project root rather than the selected file, making every schematic
+        // appear identical.
         const rootPath = findRootPath(resolverMap, fileUrl) ?? filePath;
+        const rootDirEnd = rootPath.lastIndexOf('/');
+        const rootDir = rootDirEnd >= 0 ? rootPath.slice(0, rootDirEnd + 1) : '';
 
-        const relatedExt = /\.(kicad_sch|kicad_pro)$/i;
-        const relatedFiles = new Map<string, string>(); // repo-relative path -> rawUrl
-        for (const [key, url] of resolverMap) {
-          if (!relatedExt.test(key)) continue;
-          // Prefer repo-relative paths. KiCanvas stores page identifiers using
-          // the exact sheetfile strings from the schematic, so collapsing to a
-          // basename makes sheet navigation fall back to the root page.
-          if (!key.includes('/') && findPathForBasename(resolverMap, key)) continue;
-          if (rootPath && key === fileName) {
-            relatedFiles.set(rootPath, url);
-            continue;
-          }
-          relatedFiles.set(key, url);
-        }
-        // Always include the root file itself.
-        relatedFiles.set(rootPath ?? filePath, fileUrl);
-
-        // Fetch all related files in parallel. The root one is already loaded.
+        // fetchedSources keys: full repo-relative path AND bare basename.
+        // Full paths let KiCanvas build the sheet hierarchy; basenames let it
+        // resolve Sheetfile references (which are always bare filenames).
         const fetchedSources = new Map<string, string>();
-        fetchedSources.set(fileName, rootText);
-        const fetchTasks: Promise<void>[] = [];
-        for (const [name, url] of relatedFiles) {
-          if (fetchedSources.has(name)) continue;
-          fetchTasks.push(
-            (async () => {
-              try {
-                const buf = await fetchFileContent(url);
-                fetchedSources.set(name, new TextDecoder().decode(buf));
-              } catch (e) {
-                // A missing/failed subsheet shouldn't block the whole render;
-                // KiCanvas will warn for any sheet it can't resolve.
-                console.warn(`Failed to prefetch related KiCad file ${name}:`, e);
+        fetchedSources.set(rootPath, rootText);
+        if (rootDirEnd >= 0) fetchedSources.set(rootPath.slice(rootDirEnd + 1), rootText);
+
+        // Iterative BFS so each depth level is fetched in parallel.
+        const pending = new Set<string>(extractSheetfiles(rootText));
+        const seen = new Set<string>(pending);
+        while (pending.size > 0) {
+          const level = [...pending];
+          pending.clear();
+          await Promise.all(level.map(async (sheetfile) => {
+            const url = resolverMap.get(rootDir + sheetfile) ?? resolverMap.get(sheetfile);
+            if (!url) return;
+            try {
+              const buf = await fetchFileContent(url);
+              const text = new TextDecoder().decode(buf);
+              fetchedSources.set(rootDir + sheetfile, text);
+              fetchedSources.set(sheetfile, text);
+              for (const sf of extractSheetfiles(text)) {
+                if (!seen.has(sf)) { seen.add(sf); pending.add(sf); }
               }
-            })()
-          );
+            } catch (e) {
+              console.warn(`Failed to prefetch KiCad sub-sheet ${sheetfile}:`, e);
+            }
+          }));
         }
-        await Promise.all(fetchTasks);
+
+        // Include any .kicad_pro project file in the same directory.
+        for (const [key, url] of resolverMap) {
+          if (!key.endsWith('.kicad_pro') || fetchedSources.has(key)) continue;
+          if (!key.includes('/') && findPathForBasename(resolverMap, key)) continue;
+          const inSameDir = rootDir
+            ? key.startsWith(rootDir) && !key.slice(rootDir.length).includes('/')
+            : !key.includes('/');
+          if (!inSameDir) continue;
+          try {
+            const buf = await fetchFileContent(url);
+            fetchedSources.set(key, new TextDecoder().decode(buf));
+          } catch (e) {
+            console.warn(`Failed to prefetch KiCad project file ${key}:`, e);
+          }
+        }
 
         if (cancelled) return;
 
@@ -115,18 +124,22 @@ export default function KiCadViewer({ fileUrl, filePath, fileName, resolverMap }
           return url ? new URL(url) : new URL(fileUrl);
         };
 
-        // Add the root first so KiCanvas treats it as the entry point, then
-        // add each subsheet/project file.
         const appendSource = (name: string, text: string) => {
           const source = document.createElement('kicanvas-source');
           source.setAttribute('name', name);
           source.textContent = text;
           embed.appendChild(source);
         };
-        appendSource(rootPath ?? filePath, rootText);
+
+        // fetchedSources already contains both full-path and bare-basename
+        // entries for every file (set during BFS above), so iterating it
+        // once gives KiCanvas everything it needs.
+        const appended = new Set<string>();
         for (const [name, text] of fetchedSources) {
-          if (name === (rootPath ?? filePath)) continue;
-          appendSource(name, text);
+          if (!appended.has(name)) {
+            appendSource(name, text);
+            appended.add(name);
+          }
         }
 
         mountRef.current!.appendChild(embed);
@@ -180,11 +193,17 @@ export default function KiCadViewer({ fileUrl, filePath, fileName, resolverMap }
   );
 }
 
-// The resolver map (built in fetchRepositoryFiles) contains entries keyed
-// by both full repo path (e.g. "pcb/hackxpansion.kicad_sch") and basename
-// (e.g. "hackxpansion.kicad_sch"), both pointing at the raw URL. The full
-// repo-relative path is the stable identifier KiCanvas needs for sheet
-// navigation, so we prefer it whenever we can recover it.
+// Returns all Sheetfile values referenced in a KiCad schematic string.
+function extractSheetfiles(kicadSchText: string): string[] {
+  const results: string[] = [];
+  for (const m of kicadSchText.matchAll(/\(property\s+"Sheetfile"\s+"([^"]+)"/g)) {
+    results.push(m[1]);
+  }
+  return results;
+}
+
+// Prefer the full repo-relative path entry over the bare-basename entry in
+// the resolver map so KiCanvas gets a stable page identifier.
 function findRootPath(
   resolverMap: Map<string, string>,
   rootUrl: string
