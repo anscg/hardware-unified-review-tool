@@ -21,8 +21,8 @@ const PINNED_KIND_ORDER: Record<string, number> = {
   kicad: 2,
   easyeda: 2,
   gerber: 2,
-  model: 2,
-  csv: 3 // BOM files: still pinned, but sorted to the end of the list
+  model: 3, // 3D CAD files: one tier below the schematic/PCB/Gerber files
+  csv: 4 // BOM files: still pinned, but sorted to the end of the list
 };
 
 export function getPinnedFiles(files: HardwareFile[]): HardwareFile[] {
