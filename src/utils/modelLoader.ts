@@ -242,7 +242,7 @@ function parseStlWithWorker(
   return new Promise((resolve, reject) => {
     const worker = getStlWorker();
     const id = ++stlRequestId;
-    const timeoutHandle = globalThis.setTimeout(() => {
+    const timeoutHandle = window.setTimeout(() => {
       pendingStlRequests.delete(id);
       reject(
         new Error(`STL parsing timed out after ${Math.round(timeoutMs / 1000)} seconds`)
@@ -308,7 +308,7 @@ function parseStepWithWorker(
     const id = ++stepRequestId;
     const timeoutHandle =
       typeof timeoutMs === 'number' && timeoutMs > 0
-        ? globalThis.setTimeout(() => {
+        ? window.setTimeout(() => {
             pendingStepRequests.delete(id);
             reject(
               new Error(
