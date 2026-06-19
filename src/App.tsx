@@ -6,11 +6,17 @@ import ModelViewer from './components/ModelViewer';
 import KiCadViewer from './components/KiCadViewer';
 import EasyEdaViewer from './components/EasyEdaViewer';
 import GerberViewer from './components/GerberViewer';
+import MarkdownViewer from './components/MarkdownViewer';
+import PdfViewer from './components/PdfViewer';
+import CodeViewer from './components/CodeViewer';
+import ImageViewer from './components/ImageViewer';
+import CsvViewer from './components/CsvViewer';
 import LoadingOverlay from './components/LoadingOverlay';
 import LandingPage from './components/LandingPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useStore } from './store/useStore';
 import { isGithubUrl, fetchRepositoryFiles } from './utils/github';
+import { getPinnedFiles } from './utils/fileSignal';
 import { Analytics } from '@vercel/analytics/react';
 import './App.css';
 
@@ -24,6 +30,7 @@ function App() {
     togglePerformanceMode,
     setGithubUrl,
     setFiles,
+    setAllFiles,
     setResolverMap,
     setIsLoading,
     setError,
@@ -47,7 +54,7 @@ function App() {
       try {
         await new Promise(resolve => setTimeout(resolve, 0));
         const store = useStore.getState();
-        const { files, resolverMap } = await fetchRepositoryFiles(
+        const { files, allEntries, resolverMap } = await fetchRepositoryFiles(
           store.repoOwner,
           store.repoName,
           store.repoBranch,
@@ -57,6 +64,7 @@ function App() {
           setError('No hardware files found in this repository');
         } else {
           setFiles(files);
+          setAllFiles(allEntries);
           setResolverMap(resolverMap);
           setShowViewer(true);
         }
@@ -70,7 +78,8 @@ function App() {
 
   useEffect(() => {
     if (files.length > 0 && !selectedFile) {
-      setSelectedFile(files[0]);
+      const [firstPinned] = getPinnedFiles(files);
+      setSelectedFile(firstPinned ?? files[0]);
     }
   }, [files, selectedFile, setSelectedFile]);
 
@@ -120,6 +129,16 @@ function App() {
                 <EasyEdaViewer file={selectedFile} />
               ) : selectedFile.kind === 'gerber' ? (
                 <GerberViewer file={selectedFile} />
+              ) : selectedFile.kind === 'markdown' ? (
+                <MarkdownViewer file={selectedFile} />
+              ) : selectedFile.kind === 'pdf' ? (
+                <PdfViewer file={selectedFile} />
+              ) : selectedFile.kind === 'code' ? (
+                <CodeViewer file={selectedFile} />
+              ) : selectedFile.kind === 'image' ? (
+                <ImageViewer file={selectedFile} />
+              ) : selectedFile.kind === 'csv' ? (
+                <CsvViewer file={selectedFile} />
               ) : (
                 <ModelViewer />
               )

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import * as THREE from 'three';
 
-export type HardwareFileKind = 'model' | 'kicad' | 'easyeda' | 'gerber';
+export type HardwareFileKind = 'model' | 'kicad' | 'easyeda' | 'gerber' | 'markdown' | 'pdf' | 'code' | 'image' | 'csv';
 
 export interface ModelFileData {
   kind: 'model';
@@ -45,7 +45,67 @@ export interface GerberFileData {
   size?: number;
 }
 
-export type HardwareFile = ModelFileData | KiCadFileData | EasyEdaFileData | GerberFileData;
+export interface MarkdownFileData {
+  kind: 'markdown';
+  name: string;
+  path: string;
+  url: string;
+  type: 'md';
+  size?: number;
+}
+
+export interface PdfFileData {
+  kind: 'pdf';
+  name: string;
+  path: string;
+  url: string;
+  type: 'pdf';
+  size?: number;
+}
+
+export interface CodeFileData {
+  kind: 'code';
+  name: string;
+  path: string;
+  url: string;
+  type: string; // file extension without the leading dot, lowercased
+  size?: number;
+}
+
+export interface ImageFileData {
+  kind: 'image';
+  name: string;
+  path: string;
+  url: string;
+  type: 'png';
+  size?: number;
+}
+
+export interface CsvFileData {
+  kind: 'csv';
+  name: string;
+  path: string;
+  url: string;
+  type: 'csv';
+  size?: number;
+}
+
+export type HardwareFile =
+  | ModelFileData
+  | KiCadFileData
+  | EasyEdaFileData
+  | GerberFileData
+  | MarkdownFileData
+  | PdfFileData
+  | CodeFileData
+  | ImageFileData
+  | CsvFileData;
+
+export interface RepoFileEntry {
+  path: string;
+  name: string;
+  size?: number;
+}
 
 export interface ModelComponent {
   id: string;
@@ -65,6 +125,7 @@ interface AppState {
   
   // Files state
   files: HardwareFile[];
+  allFiles: RepoFileEntry[];
   selectedFile: HardwareFile | null;
   resolverMap: Map<string, string>;
   isLoading: boolean;
@@ -80,6 +141,7 @@ interface AppState {
   // Actions
   setGithubUrl: (url: string) => void;
   setFiles: (files: HardwareFile[]) => void;
+  setAllFiles: (entries: RepoFileEntry[]) => void;
   setSelectedFile: (file: HardwareFile | null) => void;
   setResolverMap: (resolverMap: Map<string, string>) => void;
   setIsLoading: (loading: boolean) => void;
@@ -103,6 +165,7 @@ export const useStore = create<AppState>((set) => ({
   repoBranch: 'main',
   repoPath: '',
   files: [],
+  allFiles: [],
   selectedFile: null,
   resolverMap: new Map(),
   isLoading: false,
@@ -124,7 +187,9 @@ export const useStore = create<AppState>((set) => ({
   },
   
   setFiles: (files: HardwareFile[]) => set({ files }),
-  
+
+  setAllFiles: (entries: RepoFileEntry[]) => set({ allFiles: entries }),
+
   setResolverMap: (resolverMap: Map<string, string>) => set({ resolverMap }),
   
   setSelectedFile: (file: HardwareFile | null) => set({ 
@@ -179,6 +244,7 @@ export const useStore = create<AppState>((set) => ({
     repoBranch: 'main',
     repoPath: '',
     files: [],
+    allFiles: [],
     selectedFile: null,
     resolverMap: new Map(),
     isLoading: false,

@@ -11,10 +11,11 @@ export default function UrlInput() {
     repoName, 
     repoBranch, 
     repoPath,
-    setFiles, 
+    setFiles,
+    setAllFiles,
     setResolverMap,
-    setIsLoading, 
-    setError 
+    setIsLoading,
+    setError
   } = useStore();
 
   // Auto-paste detection
@@ -64,7 +65,7 @@ export default function UrlInput() {
       
       // Get the parsed values from the URL
       const store = useStore.getState();
-      const { files, resolverMap } = await fetchRepositoryFiles(
+      const { files, allEntries, resolverMap } = await fetchRepositoryFiles(
         store.repoOwner,
         store.repoName,
         store.repoBranch,
@@ -75,6 +76,7 @@ export default function UrlInput() {
         setError('No hardware files found in this repository');
       } else {
         setFiles(files);
+        setAllFiles(allEntries);
         setResolverMap(resolverMap);
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('repo', urlToProcess);

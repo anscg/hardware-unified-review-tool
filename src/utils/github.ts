@@ -4,6 +4,12 @@ import type {
   KiCadFileData,
   EasyEdaFileData,
   GerberFileData,
+  MarkdownFileData,
+  PdfFileData,
+  CodeFileData,
+  ImageFileData,
+  CsvFileData,
+  RepoFileEntry,
 } from '../store/useStore';
 
 const GITHUB_API_BASE = 'https://api.github.com';
@@ -27,7 +33,33 @@ const MODEL_EXTENSIONS = ['.stl', '.step', '.stp', '.obj', '.gltf', '.glb', '.pl
 const KICAD_EXTENSIONS = ['.kicad_sch', '.kicad_pcb', '.kicad_prj', '.kicad_wks'];
 const EASYEDA_EXTENSIONS = ['.json', '.epro', '.eproproject', '.esch', '.epcb', '.zip'];
 const GERBER_EXTENSIONS = ['.gbr', '.ger', '.gtl', '.gbl', '.gts', '.gbs', '.gto', '.gbo', '.gtp', '.gbp', '.gm1', '.gm2', '.gko', '.drl', '.xln'];
-const SUPPORTED_EXTENSIONS = [...MODEL_EXTENSIONS, ...KICAD_EXTENSIONS, ...EASYEDA_EXTENSIONS, ...GERBER_EXTENSIONS];
+const MARKDOWN_EXTENSIONS = ['.md', '.markdown'];
+const PDF_EXTENSIONS = ['.pdf'];
+const IMAGE_EXTENSIONS = ['.png'];
+const CSV_EXTENSIONS = ['.csv'];
+// Generic source/config/text files. Excludes .json (already claimed by EASYEDA_EXTENSIONS)
+// and anything else already covered by a more specific kind above.
+const CODE_EXTENSIONS = [
+  '.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx',
+  '.py', '.c', '.h', '.cpp', '.cc', '.cxx', '.hpp', '.hh',
+  '.cs', '.java', '.go', '.rs', '.rb', '.php', '.lua', '.swift', '.kt', '.kts', '.dart', '.groovy',
+  '.sh', '.bash', '.ps1', '.sql',
+  '.yaml', '.yml', '.toml', '.ini', '.cfg', '.properties',
+  '.xml', '.html', '.htm', '.vue', '.svelte',
+  '.css', '.scss', '.less',
+  '.txt', '.log', '.diff', '.patch', '.graphql', '.gql',
+];
+const SUPPORTED_EXTENSIONS = [
+  ...MODEL_EXTENSIONS,
+  ...KICAD_EXTENSIONS,
+  ...EASYEDA_EXTENSIONS,
+  ...GERBER_EXTENSIONS,
+  ...MARKDOWN_EXTENSIONS,
+  ...PDF_EXTENSIONS,
+  ...IMAGE_EXTENSIONS,
+  ...CSV_EXTENSIONS,
+  ...CODE_EXTENSIONS,
+];
 
 /**
  * Fetch all files from a GitHub repo using the Git Trees API (single request).
@@ -38,11 +70,12 @@ export async function fetchRepositoryFiles(
   repo: string,
   branch: string = 'main',
   path: string = ''
-): Promise<{ files: HardwareFile[], resolverMap: Map<string, string> }> {
+): Promise<{ files: HardwareFile[], allEntries: RepoFileEntry[], resolverMap: Map<string, string> }> {
   const normalizedPath = path.replace(/^\/+|\/+$/g, '');
   const resolved = await resolveTreeForBranchAndPath(owner, repo, branch, normalizedPath);
   const data = resolved.data;
   const files: HardwareFile[] = [];
+  const allEntries: RepoFileEntry[] = [];
   const resolverMap = new Map<string, string>();
 
   if (!data.tree) {
@@ -63,6 +96,8 @@ export async function fetchRepositoryFiles(
 
     // If a sub-path was specified, only include files under it
     if (resolved.path && !item.path.startsWith(resolved.path)) continue;
+
+    allEntries.push({ path: item.path, name, size: item.size });
 
     const ext = getFileExtension(name);
     if (ext && SUPPORTED_EXTENSIONS.includes(ext)) {
@@ -103,6 +138,51 @@ export async function fetchRepositoryFiles(
           type: isDrill ? 'gerber_drill' : 'gerber_rs274x',
           size: item.size
         });
+      } else if (MARKDOWN_EXTENSIONS.includes(ext)) {
+        files.push({
+          kind: 'markdown',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: 'md' as MarkdownFileData['type'],
+          size: item.size
+        });
+      } else if (PDF_EXTENSIONS.includes(ext)) {
+        files.push({
+          kind: 'pdf',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: 'pdf' as PdfFileData['type'],
+          size: item.size
+        });
+      } else if (IMAGE_EXTENSIONS.includes(ext)) {
+        files.push({
+          kind: 'image',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: 'png' as ImageFileData['type'],
+          size: item.size
+        });
+      } else if (CSV_EXTENSIONS.includes(ext)) {
+        files.push({
+          kind: 'csv',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: 'csv' as CsvFileData['type'],
+          size: item.size
+        });
+      } else if (CODE_EXTENSIONS.includes(ext)) {
+        files.push({
+          kind: 'code',
+          name,
+          path: item.path,
+          url: rawUrl,
+          type: ext.slice(1) as CodeFileData['type'],
+          size: item.size
+        });
       } else {
         files.push({
           kind: 'model',
@@ -116,7 +196,7 @@ export async function fetchRepositoryFiles(
     }
   }
 
-  return { files, resolverMap };
+  return { files, allEntries, resolverMap };
 }
 
 async function resolveTreeForBranchAndPath(

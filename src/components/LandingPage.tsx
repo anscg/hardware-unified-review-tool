@@ -6,7 +6,7 @@ export default function LandingPage({ onLoaded }: { onLoaded: () => void }) {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setGithubUrl, setFiles, setResolverMap, setIsLoading: setGlobalLoading, setError: setGlobalError } = useStore();
+  const { setGithubUrl, setFiles, setAllFiles, setResolverMap, setIsLoading: setGlobalLoading, setError: setGlobalError } = useStore();
 
   const loadRepo = async (url: string) => {
     if (!isGithubUrl(url)) {
@@ -23,7 +23,7 @@ export default function LandingPage({ onLoaded }: { onLoaded: () => void }) {
     try {
       await new Promise(resolve => setTimeout(resolve, 0));
       const store = useStore.getState();
-      const { files, resolverMap } = await fetchRepositoryFiles(
+      const { files, allEntries, resolverMap } = await fetchRepositoryFiles(
         store.repoOwner,
         store.repoName,
         store.repoBranch,
@@ -35,6 +35,7 @@ export default function LandingPage({ onLoaded }: { onLoaded: () => void }) {
         setIsLoading(false);
       } else {
         setFiles(files);
+        setAllFiles(allEntries);
         setResolverMap(resolverMap);
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('repo', url);
