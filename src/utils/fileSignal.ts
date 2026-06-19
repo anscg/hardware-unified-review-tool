@@ -1,11 +1,11 @@
 import type { HardwareFile } from '../store/useStore';
 
 // The "important stuff" for a quick skim: the readme, any PDFs (datasheets/manuals),
-// every loadable CAD/PCB/Gerber file, and BOM-style .csv files. Drives the Pinned view,
-// which folders auto-expand in the Full view, and which file opens by default on load.
+// every loadable CAD/PCB/Gerber/3D-model file, and BOM-style .csv files. Drives the Pinned
+// view, which folders auto-expand in the Full view, and which file opens by default on load.
 export function isSignalFile(file: HardwareFile): boolean {
   if (file.kind === 'pdf' || file.kind === 'csv') return true;
-  if (file.kind === 'kicad' || file.kind === 'gerber') return true;
+  if (file.kind === 'kicad' || file.kind === 'gerber' || file.kind === 'model') return true;
   // easyeda_json and easyeda_zip are catch-alls (any .json or non-gerber-looking .zip in the
   // repo gets tagged 'easyeda'), not a real signal of an EasyEDA project -- e.g. they also
   // catch package.json/tsconfig.json and unrelated zip archives like KiCad project backups.
@@ -21,6 +21,7 @@ const PINNED_KIND_ORDER: Record<string, number> = {
   kicad: 2,
   easyeda: 2,
   gerber: 2,
+  model: 2,
   csv: 3 // BOM files: still pinned, but sorted to the end of the list
 };
 
