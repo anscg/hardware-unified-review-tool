@@ -18,6 +18,14 @@ function escapeAttr(value: string): string {
 // against the raw file's own URL instead, same as GitHub does when rendering a README.
 function resolveRelativeUrl(href: string, baseUrl: string): string {
   if (!href || href.startsWith('#')) return href;
+  // A leading "/" means "repo root" on GitHub, but resolving it against a
+  // raw.githubusercontent.com URL with the standard URL() rules would instead
+  // anchor it to that host's root (e.g. "/media/x.png" -> raw.githubusercontent.com/media/x.png,
+  // which 404s). Anchor root-relative paths to the owner/repo/branch prefix instead.
+  if (href.startsWith('/')) {
+    const match = baseUrl.match(/^(https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+)\//);
+    if (match) return match[1] + href;
+  }
   try {
     return new URL(href, baseUrl).toString();
   } catch {
