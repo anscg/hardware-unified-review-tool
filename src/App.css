@@ -1218,6 +1218,10 @@
 
 .markdown-body img {
   max-width: 100%;
+  /* READMEs often use raw <img width height> attributes (e.g. pasted GitHub screenshots) --
+     without this, the browser keeps the explicit height while only max-width shrinks,
+     stretching the image vertically. */
+  height: auto;
 }
 
 .markdown-body blockquote {
