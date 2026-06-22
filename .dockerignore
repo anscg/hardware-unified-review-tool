@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.github
+*.epro
+temp_epro_extract
+kicanvas
+3dcanvas
+*.kicad_sch
+tree.json
